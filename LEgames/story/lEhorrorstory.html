@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>LemonzGhost: Interactive Horror Story</title>
+  <title>LE Interactive Horror Story</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body, html {
@@ -116,17 +116,17 @@
 </head>
 <body>
   <div id="container">
-    <h1>LemonzGhost: Interactive Horror Story</h1>
+    <h1>LE Interactive Horror Story</h1>
     <div id="storyBox"></div>
     <div id="choices"></div>
     <div id="startMenu">
-      <h2>LemonzGhost</h2>
+      <h2>LE Interactive Horror Story</h2>
       <p>Can you survive the haunted house?<br>Choose wisely. Every choice matters!</p>
       <button id="startBtn">Start Story</button>
     </div>
   </div>
   <script>
-    // Story nodes
+    
     const story = {
       start: {
         text: `You stand before an old, abandoned house. The wind howls and the moonlight barely lights up the broken windows. 
@@ -260,7 +260,7 @@ Do you enter the hidden door?`,
 
     window.onload = function() {
       document.getElementById("startBtn").onclick = startStory;
-      // Show splash art when not started
+      
       document.getElementById("storyBox").innerHTML = `
         <span style="font-size:1.3em;color:#ffff33;">Welcome to LemonzGhost: Interactive Horror Story</span><br>
         <span style="color:#fff;">Press Start to begin your adventure...</span>
@@ -269,4 +269,5 @@ Do you enter the hidden door?`,
     };
   </script>
 </body>
+
 </html>

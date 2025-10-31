@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>lemonzghost</title>
+  <title>LE Ghost Chase</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body, html {
@@ -145,33 +145,33 @@
 </head>
 <body>
   <div id="container">
-    <h2>lemonzghost</h2>
+    <h2>LE Ghost Chase</h2>
     <canvas id="gameCanvas" width="480" height="320"></canvas>
     <div id="gameOver">
       Game Over<br>
       <span id="scoreText"></span><br>
       <button onclick="restartGame()">Try Again</button>
     </div>
-    <!-- Start Menu -->
+    
     <div id="startMenu">
-      <h1>lemonzghost</h1>
+      <h1>LE Ghost Chase</h1>
       <p>Run away from the ghost!<br>Use arrow keys or buttons.<br>How long can you survive?</p>
       <button id="startBtn">Start Game</button>
     </div>
-    <!-- Video for jump scare -->
+    
     <video id="jumpScareVideo" src="ghost.mp4" preload="auto"></video>
-    <!-- Controls for mobile -->
+    
     <div id="controls">
       <button class="arrow-btn" id="leftBtn">&#8592;</button>
       <button class="arrow-btn" id="upBtn">&#8593;</button>
       <button class="arrow-btn" id="downBtn">&#8595;</button>
       <button class="arrow-btn" id="rightBtn">&#8594;</button>
     </div>
-    <!-- Background audio -->
+    
     <audio id="bgAudio" src="LEghost.mp3" preload="auto" loop></audio>
   </div>
   <script>
-    // Responsive canvas
+    
     function resizeCanvas() {
       const canvas = document.getElementById('gameCanvas');
       if (window.innerWidth < 600) {
@@ -189,12 +189,12 @@
     const ctx = canvas.getContext('2d');
     const isMobile = window.innerWidth < 600;
 
-    // Controls
+    
     const keys = {};
     document.addEventListener('keydown', e => { keys[e.key] = true; });
     document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-    // Touch controls
+    
     if (isMobile) {
       document.getElementById('controls').style.display = 'flex';
       document.getElementById('upBtn').ontouchstart = () => keys['ArrowUp'] = true;
@@ -207,25 +207,25 @@
       document.getElementById('rightBtn').ontouchend = () => keys['ArrowRight'] = false;
     }
 
-    // Game state
+    
     let player, ghost, gameOver, startTime;
     let gameStarted = false;
-    let firstTouch = false; // For mobile autoplay
+    let firstTouch = false; 
 
     function resetGameState() {
       player = {
         x: canvas.width * 0.13, 
         y: canvas.height * 0.18, 
-        size: canvas.width * 0.055, // Bigger player
+        size: canvas.width * 0.055, 
         color: '#ffff33', 
-        speed: Math.max(3.2, canvas.width / 140) // Faster player
+        speed: Math.max(3.2, canvas.width / 140) 
       };
       ghost = {
         x: canvas.width * 0.82, 
         y: canvas.height * 0.78, 
-        size: canvas.width * 0.045, // Smaller ghost
+        size: canvas.width * 0.045, 
         color: '#fff', 
-        speed: Math.max(1.25, canvas.width / 400) // Slower ghost
+        speed: Math.max(1.25, canvas.width / 400) 
       };
       gameOver = false;
       startTime = performance.now();
@@ -340,7 +340,7 @@
       startGame();
     };
 
-    // Audio controls
+    
     const bgAudio = document.getElementById('bgAudio');
     function playAudio() {
       bgAudio.currentTime = 0;
@@ -355,7 +355,7 @@
       bgAudio.play();
     });
 
-    // Start menu logic
+   
     function showStartMenu() {
       document.getElementById('startMenu').style.display = 'flex';
       document.getElementById('gameOver').style.display = 'none';
@@ -369,7 +369,7 @@
     }
 
     function drawSplash() {
-      // Draw initial canvas art
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = Math.max(28, canvas.width/12) + 'px Arial';
       ctx.fillStyle = '#ffff33';
@@ -388,7 +388,7 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // Mobile: activate audio only after user interaction
+    
     function enableAudioOnMobile() {
       if (firstTouch) return;
       firstTouch = true;
@@ -403,7 +403,7 @@
         window.addEventListener('touchstart', enableAudioOnMobile, {once:true});
         window.addEventListener('click', enableAudioOnMobile, {once:true});
       }
-      // Start button
+      
       document.getElementById('startBtn').onclick = function() {
         startGame();
       };
@@ -415,4 +415,5 @@
     });
   </script>
 </body>
+
 </html>

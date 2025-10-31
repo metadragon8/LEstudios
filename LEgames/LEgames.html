@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LE Games </title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1b1100 0%, #2b1d09 100%);
+      color: #ffe082;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    
+    .blood-drip {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      width: 80px;
+      height: 140px;
+      z-index: 0;
+      transform: translateX(-50%);
+      pointer-events: none;
+      animation: drip 2.8s infinite linear;
+    }
+    @keyframes drip {
+      0% { opacity: 0; top: -40px; }
+      7% { opacity: 1; }
+      80% { opacity: 1; top: 60px; }
+      100% { opacity: 0; top: 120px; }
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      position: relative;
+      letter-spacing: .05em;
+      text-shadow: 0 0 14px #ff0000, 0 0 28px #ffe082, 0 0 40px #111;
+      animation: flicker 2.5s infinite alternate;
+    }
+    @keyframes flicker {
+      0%, 100% { text-shadow: 0 0 14px #ff0000, 0 0 28px #ffe082, 0 0 40px #111;}
+      40% { text-shadow: 0 0 18px #ff2222, 0 0 42px #ffe082, 0 0 60px #111;}
+      60% { text-shadow: 0 0 24px #ff0000, 0 0 38px #ffe082, 0 0 64px #222;}
+      80% { text-shadow: 0 0 20px #b30000, 0 0 30px #ffe082, 0 0 44px #111;}
+    }
+
+    .game-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      max-width: 1100px;
+      z-index: 1;
+    }
+
+    .game-card {
+      background: linear-gradient(135deg, #452a0a 0%, #251200 100%);
+      border-radius: 22px;
+      padding: 1.7rem 1.3rem 1.1rem 1.3rem;
+      text-align: center;
+      box-shadow: 0 8px 22px 6px rgba(111,0,0,0.23), 0 0 0 5px #3c2200 inset;
+      transition: transform 0.18s cubic-bezier(.51,.5,.23,1.2), box-shadow .18s;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #ffe082;
+    }
+    .game-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 16px 38px 10px rgba(111,0,0,0.32), 0 0 0 7px #ff0000 inset;
+      border-color: #ff0000;
+      animation: cardFlicker 0.5s 1;
+    }
+    @keyframes cardFlicker {
+      0% { box-shadow: 0 8px 22px 6px rgba(111,0,0,0.23), 0 0 0 5px #3c2200 inset;}
+      30% { box-shadow: 0 16px 38px 10px rgba(111,0,0,0.32), 0 0 0 7px #ff0000 inset;}
+      70% { box-shadow: 0 8px 22px 6px rgba(111,0,0,0.23), 0 0 0 5px #ffe082 inset;}
+      100% { box-shadow: 0 16px 38px 10px rgba(111,0,0,0.32), 0 0 0 7px #ff0000 inset;}
+    }
+
+    .game-card a {
+      text-decoration: none;
+      color: #ffe082;
+      font-weight: bold;
+      font-size: 1.17rem;
+      display: block;
+      margin-top: 1.15rem;
+      letter-spacing: .03em;
+      background: linear-gradient(90deg,#222,#3b1d00,#222);
+      border-radius: 10px;
+      padding: 0.5em 0;
+      box-shadow: 0 2px 8px 1px #2b1d09;
+      transition: background .18s;
+    }
+    .game-card a:hover {
+      background: linear-gradient(90deg,#ff0000,#ffe082,#ff0000);
+      color: #222;
+    }
+
+    .emoji {
+      font-size: 2.7rem;
+      margin-bottom: 0.6rem;
+      transition: filter .18s;
+      filter: drop-shadow(0 0 12px #ffe082) drop-shadow(0 0 4px #ff0000);
+      animation: lemonPulse 2.2s infinite alternate;
+    }
+    @keyframes lemonPulse {
+      0% { filter: drop-shadow(0 0 8px #ffe082) drop-shadow(0 0 2px #ff0000);}
+      50% { filter: drop-shadow(0 0 24px #ffe082) drop-shadow(0 0 8px #ff0000);}
+      100% { filter: drop-shadow(0 0 8px #ffe082) drop-shadow(0 0 2px #ff0000);}
+    }
+
+    
+    @media (max-width: 650px) {
+      .game-list {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      body {
+        padding: 0.7rem;
+      }
+      .game-card {
+        padding: 1.1rem 0.7rem 0.7rem 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <svg class="blood-drip" viewBox="0 0 80 140">
+    <path d="M0,0 Q40,30 80,0 Q40,80 55,120 Q40,80 25,120 Q40,80 0,0 Z"
+      fill="#ff0000" stroke="#b30000" stroke-width="2"/>
+    <ellipse cx="40" cy="135" rx="13" ry="5" fill="#b30000" opacity="0.7"/>
+  </svg>
+  <h1>LE Game Center </h1>
+  <div class="game-list">
+    <div class="game-card">
+      <div class="emoji">🕹️</div>
+      <div>Flappy LE</div>
+      <a href="flappyle/flappyle.html" target="_blank">Play Now</a>
+    </div>
+    <div class="game-card">
+      <div class="emoji">🕹️</div>
+      <div>LE Jump</div>
+      <a href="LeJump/lejump.html" target="_blank">Play Now</a>
+    </div>
+    <div class="game-card">
+      <div class="emoji">🎴</div>
+      <div>LE Uno</div>
+      <a href="LEUno/lEuno.html" target="_blank">Play Now</a>
+    </div>
+
+   
+    <div class="game-card">
+      <div class="emoji">👻</div>
+      <div>LE Ghost Chase</div>
+      <a href="ghost/LEghost.html" target="_blank">Play Now</a>
+      <div style="font-size:0.97em;color:#ff0000;margin-top:0.5em;">Scary!</div>
+    </div>
+
+    <div class="game-card">
+      <div class="emoji">📖</div>
+      <div>LE Interactive Horror Story</div>
+      <a href="story/lEhorrorstory.html" target="_blank">Play Now</a>
+      <div style="font-size:0.97em;color:#ff0000;margin-top:0.5em;">Choose your fate...</div>
+    </div>
+
+    <div class="game-card">
+      <div class="emoji">💀</div>
+      <div>LE Ghost Dodge</div>
+      <a href="LEGhostGhostDodge/LEGhostGhostDodge.html" target="_blank">Play Now</a>
+      <div style="font-size:0.97em;color:#ff0000;margin-top:0.5em;">How long can you survive?</div>
+    </div>
+    
+  </div>
+</body>
+</html>

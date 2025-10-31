@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>lemonzghost</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body, html {
+      background: #181818;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    h2 {
+      margin-top: 14px;
+      margin-bottom: 4px;
+      font-size: 1.4em;
+    }
+    #gameCanvas {
+      background: #222;
+      border: 2px solid #fff;
+      border-radius: 18px;
+      max-width: 98vw;
+      max-height: 48vh;
+      width: 480px;
+      height: 320px;
+      touch-action: none;
+    }
+    #gameOver {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20,0,0,0.92);
+      color: #fff;
+      padding: 18px 23px;
+      border-radius: 15px;
+      font-size: 1.3em;
+      z-index: 99;
+      box-shadow: 0 0 40px #ff0000;
+    }
+    #startMenu {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(24,24,24,0.98);
+      z-index: 101;
+    }
+    #startMenu h1 {
+      font-size: 2.3em;
+      margin-bottom: 12px;
+      color: #ffff33;
+      text-shadow: 0 0 16px #fff;
+    }
+    #startMenu button {
+      padding: 18px 45px;
+      font-size: 1.2em;
+      border-radius: 12px;
+      border: 2px solid #ffff33;
+      background: #222;
+      color: #ffff33;
+      margin-top: 18px;
+      cursor: pointer;
+      box-shadow: 0 0 18px #222;
+      transition: 0.2s;
+    }
+    #startMenu button:active {
+      background: #ffff33;
+      color: #222;
+      border-color: #fff;
+    }
+    #jumpScareVideo {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 100;
+      background: #000;
+    }
+    #controls {
+      display: none;
+      position: fixed;
+      bottom: 5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      gap: 2vw;
+    }
+    .arrow-btn {
+      background: #444;
+      color: #fff;
+      border: 2px solid #ffff33;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      font-size: 2em;
+      margin: 5px;
+      opacity: 0.85;
+      box-shadow: 0 0 12px #222;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .arrow-btn:active {
+      background: #ffff33;
+      color: #181818;
+      border-color: #fff;
+    }
+    @media (max-width: 600px) {
+      #gameCanvas {
+        width: 98vw;
+        height: 45vw;
+        max-width: 98vw;
+        max-height: 48vh;
+      }
+      #controls {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2>lemonzghost</h2>
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
+    <div id="gameOver">
+      Game Over<br>
+      <span id="scoreText"></span><br>
+      <button onclick="restartGame()">Try Again</button>
+    </div>
+    <!-- Start Menu -->
+    <div id="startMenu">
+      <h1>lemonzghost</h1>
+      <p>Run away from the ghost!<br>Use arrow keys or buttons.<br>How long can you survive?</p>
+      <button id="startBtn">Start Game</button>
+    </div>
+    <!-- Video for jump scare -->
+    <video id="jumpScareVideo" src="ghost.mp4" preload="auto"></video>
+    <!-- Controls for mobile -->
+    <div id="controls">
+      <button class="arrow-btn" id="leftBtn">&#8592;</button>
+      <button class="arrow-btn" id="upBtn">&#8593;</button>
+      <button class="arrow-btn" id="downBtn">&#8595;</button>
+      <button class="arrow-btn" id="rightBtn">&#8594;</button>
+    </div>
+    <!-- Background audio -->
+    <audio id="bgAudio" src="LEghost.mp3" preload="auto" loop></audio>
+  </div>
+  <script>
+    // Responsive canvas
+    function resizeCanvas() {
+      const canvas = document.getElementById('gameCanvas');
+      if (window.innerWidth < 600) {
+        canvas.width = window.innerWidth * 0.98;
+        canvas.height = window.innerWidth * 0.45;
+      } else {
+        canvas.width = 480;
+        canvas.height = 320;
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const isMobile = window.innerWidth < 600;
+
+    // Controls
+    const keys = {};
+    document.addEventListener('keydown', e => { keys[e.key] = true; });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    // Touch controls
+    if (isMobile) {
+      document.getElementById('controls').style.display = 'flex';
+      document.getElementById('upBtn').ontouchstart = () => keys['ArrowUp'] = true;
+      document.getElementById('upBtn').ontouchend = () => keys['ArrowUp'] = false;
+      document.getElementById('downBtn').ontouchstart = () => keys['ArrowDown'] = true;
+      document.getElementById('downBtn').ontouchend = () => keys['ArrowDown'] = false;
+      document.getElementById('leftBtn').ontouchstart = () => keys['ArrowLeft'] = true;
+      document.getElementById('leftBtn').ontouchend = () => keys['ArrowLeft'] = false;
+      document.getElementById('rightBtn').ontouchstart = () => keys['ArrowRight'] = true;
+      document.getElementById('rightBtn').ontouchend = () => keys['ArrowRight'] = false;
+    }
+
+    // Game state
+    let player, ghost, gameOver, startTime;
+    let gameStarted = false;
+    let firstTouch = false; // For mobile autoplay
+
+    function resetGameState() {
+      player = {
+        x: canvas.width * 0.13, 
+        y: canvas.height * 0.18, 
+        size: canvas.width * 0.055, // Bigger player
+        color: '#ffff33', 
+        speed: Math.max(3.2, canvas.width / 140) // Faster player
+      };
+      ghost = {
+        x: canvas.width * 0.82, 
+        y: canvas.height * 0.78, 
+        size: canvas.width * 0.045, // Smaller ghost
+        color: '#fff', 
+        speed: Math.max(1.25, canvas.width / 400) // Slower ghost
+      };
+      gameOver = false;
+      startTime = performance.now();
+    }
+
+    function drawCircle(obj) {
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y, obj.size, 0, 2 * Math.PI);
+      ctx.fillStyle = obj.color;
+      ctx.shadowColor = obj === ghost ? '#ff0000' : '#000';
+      ctx.shadowBlur = obj === ghost ? 18 : 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawGhostFace(obj) {
+      ctx.beginPath();
+      ctx.arc(obj.x - obj.size/2.3, obj.y - obj.size/2.8, obj.size/6, 0, 2 * Math.PI);
+      ctx.arc(obj.x + obj.size/2.3, obj.y - obj.size/2.8, obj.size/6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#222';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y + obj.size/3, obj.size/3, 0, Math.PI, false);
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function movePlayer() {
+      if (keys['ArrowUp']) player.y -= player.speed;
+      if (keys['ArrowDown']) player.y += player.speed;
+      if (keys['ArrowLeft']) player.x -= player.speed;
+      if (keys['ArrowRight']) player.x += player.speed;
+      player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+    }
+
+    function moveGhost() {
+      let dx = player.x - ghost.x;
+      let dy = player.y - ghost.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > 1) {
+        ghost.x += ghost.speed * dx / dist;
+        ghost.y += ghost.speed * dy / dist;
+      }
+    }
+
+    function checkCollision() {
+      const dx = player.x - ghost.x;
+      const dy = player.y - ghost.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < player.size * 0.7 + ghost.size * 0.7) {
+        return true;
+      }
+      return false;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawCircle(player);
+      drawCircle(ghost);
+      drawGhostFace(ghost);
+      ctx.font = Math.max(16, canvas.width/32) + 'px Arial';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('Run away! Use arrow keys', 18, 28);
+      ctx.fillText('Survival Time: ' + Math.floor((performance.now() - startTime)/1000) + ' sec', canvas.width - 210, 28);
+    }
+
+    function gameLoop() {
+      if (!gameStarted || gameOver) return;
+      movePlayer();
+      moveGhost();
+      if (checkCollision()) {
+        endGame();
+        return;
+      }
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function endGame() {
+      gameOver = true;
+      stopAudio();
+      document.getElementById('gameOver').style.display = 'block';
+      document.getElementById('scoreText').innerText =
+        'Survival Time: ' + Math.floor((performance.now() - startTime)/1000) + ' sec';
+      showJumpScare();
+    }
+
+    function showJumpScare() {
+      const video = document.getElementById('jumpScareVideo');
+      video.style.display = 'block';
+      video.currentTime = 0;
+      video.volume = 1;
+      video.play();
+      video.onended = () => {
+        video.style.display = 'none';
+      };
+      window._jumpScareActive = true;
+      video.onclick = () => {
+        video.pause();
+        video.style.display = 'none';
+      };
+    }
+
+    window.restartGame = function() {
+      resetGameState();
+      document.getElementById('gameOver').style.display = 'none';
+      const video = document.getElementById('jumpScareVideo');
+      video.pause();
+      video.style.display = 'none';
+      startGame();
+    };
+
+    // Audio controls
+    const bgAudio = document.getElementById('bgAudio');
+    function playAudio() {
+      bgAudio.currentTime = 0;
+      bgAudio.play();
+    }
+    function stopAudio() {
+      bgAudio.pause();
+      bgAudio.currentTime = 0;
+    }
+    bgAudio.addEventListener('ended', () => {
+      bgAudio.currentTime = 0;
+      bgAudio.play();
+    });
+
+    // Start menu logic
+    function showStartMenu() {
+      document.getElementById('startMenu').style.display = 'flex';
+      document.getElementById('gameOver').style.display = 'none';
+      gameStarted = false;
+      stopAudio();
+      drawSplash();
+    }
+    function hideStartMenu() {
+      document.getElementById('startMenu').style.display = 'none';
+      gameStarted = true;
+    }
+
+    function drawSplash() {
+      // Draw initial canvas art
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = Math.max(28, canvas.width/12) + 'px Arial';
+      ctx.fillStyle = '#ffff33';
+      ctx.textAlign = "center";
+      ctx.fillText('lemonzghost', canvas.width/2, canvas.height/2 - 25);
+      ctx.font = Math.max(18, canvas.width/28) + 'px Arial';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('Press Start to Begin!', canvas.width/2, canvas.height/2 + 16);
+    }
+
+    function startGame() {
+      hideStartMenu();
+      resetGameState();
+      draw();
+      playAudio();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Mobile: activate audio only after user interaction
+    function enableAudioOnMobile() {
+      if (firstTouch) return;
+      firstTouch = true;
+      playAudio();
+      window.removeEventListener('touchstart', enableAudioOnMobile);
+      window.removeEventListener('click', enableAudioOnMobile);
+    }
+
+    window.onload = function() {
+      showStartMenu();
+      if (isMobile) {
+        window.addEventListener('touchstart', enableAudioOnMobile, {once:true});
+        window.addEventListener('click', enableAudioOnMobile, {once:true});
+      }
+      // Start button
+      document.getElementById('startBtn').onclick = function() {
+        startGame();
+      };
+    };
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) stopAudio();
+      else if (gameStarted && !gameOver && firstTouch) playAudio();
+    });
+  </script>
+</body>
+</html>

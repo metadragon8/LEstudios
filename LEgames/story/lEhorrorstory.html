@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LemonzGhost: Interactive Horror Story</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body, html {
+      background: #151414;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      min-height: 100vh;
+      overflow-x: hidden;
+      text-align: center;
+    }
+    #container {
+      width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    h1 {
+      margin: 18px 0 0 0;
+      font-size: 2em;
+      color: #ffff33;
+      letter-spacing: .03em;
+      text-shadow: 0 0 12px #222;
+    }
+    #storyBox {
+      background: #211f1f;
+      border-radius: 15px;
+      box-shadow: 0 0 18px #222;
+      padding: 28px;
+      margin-top: 28px;
+      max-width: 480px;
+      width: 94vw;
+      min-height: 140px;
+      font-size: 1.2em;
+      line-height: 1.7em;
+      position: relative;
+    }
+    #choices {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+    }
+    .choiceBtn {
+      padding: 12px 36px;
+      background: #222;
+      color: #ffff33;
+      font-size: 1.1em;
+      border: 2px solid #ffff33;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: .2s;
+      box-shadow: 0 0 11px #222;
+      margin-bottom: 2px;
+      max-width: 90vw;
+      width: fit-content;
+    }
+    .choiceBtn:active {
+      background: #ffff33;
+      color: #222;
+      border-color: #fff;
+    }
+    #startMenu {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(24,24,24,0.97);
+      z-index: 100;
+    }
+    #startMenu h2 {
+      font-size: 2.3em;
+      margin-bottom: 12px;
+      color: #ffff33;
+      text-shadow: 0 0 16px #fff;
+    }
+    #startMenu button {
+      padding: 18px 45px;
+      font-size: 1.2em;
+      border-radius: 12px;
+      border: 2px solid #ffff33;
+      background: #222;
+      color: #ffff33;
+      margin-top: 18px;
+      cursor: pointer;
+      box-shadow: 0 0 18px #222;
+      transition: 0.2s;
+    }
+    #startMenu button:active {
+      background: #ffff33;
+      color: #222;
+      border-color: #fff;
+    }
+    @media (max-width: 600px) {
+      #storyBox {
+        padding: 16px;
+        font-size: 1em;
+      }
+      h1 { font-size: 1.3em; }
+      #startMenu h2 { font-size: 1.4em; }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>LemonzGhost: Interactive Horror Story</h1>
+    <div id="storyBox"></div>
+    <div id="choices"></div>
+    <div id="startMenu">
+      <h2>LemonzGhost</h2>
+      <p>Can you survive the haunted house?<br>Choose wisely. Every choice matters!</p>
+      <button id="startBtn">Start Story</button>
+    </div>
+  </div>
+  <script>
+    // Story nodes
+    const story = {
+      start: {
+        text: `You stand before an old, abandoned house. The wind howls and the moonlight barely lights up the broken windows. 
+<br><br>
+Do you dare to enter?`,
+        choices: [
+          { text: "Enter the house", next: "entry" },
+          { text: "Walk away", next: "walkaway" }
+        ]
+      },
+      walkaway: {
+        text: `You decide it's not worth the risk. As you turn away, you feel a cold breath on your neck... You run, never looking back.
+<br><br>
+<b>Ending: Safe, but always haunted by curiosity.</b>`,
+        choices: [
+          { text: "Restart", next: "start" }
+        ]
+      },
+      entry: {
+        text: `You step inside. The door slams shut behind you. The darkness is thick. You see a flickering light from the living room and hear footsteps upstairs.
+<br><br>
+Where will you go?`,
+        choices: [
+          { text: "Go to the living room", next: "livingroom" },
+          { text: "Go upstairs", next: "upstairs" }
+        ]
+      },
+      livingroom: {
+        text: `The living room is filled with old furniture and dust. A candle burns on the table. Suddenly, you hear a whisper: "Leave while you can..."
+<br><br>
+What will you do?`,
+        choices: [
+          { text: "Blow out the candle", next: "candle" },
+          { text: "Search the room", next: "searchroom" }
+        ]
+      },
+      candle: {
+        text: `You blow out the candle. The room becomes pitch dark. You feel something cold grab your arm. You scream, but no one hears.
+<br><br>
+<b>Ending: Lost in the darkness forever.</b>`,
+        choices: [
+          { text: "Restart", next: "start" }
+        ]
+      },
+      searchroom: {
+        text: `You search the room and find an old key hidden under the carpet. The whispers stop. Maybe this key will help you escape.
+<br><br>
+Where will you go next?`,
+        choices: [
+          { text: "Go upstairs", next: "upstairs_with_key" },
+          { text: "Try to open the front door", next: "escape" }
+        ]
+      },
+      escape: {
+        text: `You try the key on the front door. It works! You run outside, gasping for air. The house stands silent behind you.
+<br><br>
+<b>Ending: Escaped! You survived the haunted house.</b>`,
+        choices: [
+          { text: "Restart", next: "start" }
+        ]
+      },
+      upstairs: {
+        text: `You climb the creaky stairs. At the top, a shadowy figure blocks your way. Its eyes glow red.
+<br><br>
+What will you do?`,
+        choices: [
+          { text: "Run back downstairs", next: "livingroom" },
+          { text: "Speak to the figure", next: "ghosttalk" }
+        ]
+      },
+      upstairs_with_key: {
+        text: `You climb the stairs with the key in your hand. The shadowy figure stares at you. You feel the key pulsing with energy.
+<br><br>
+What will you do?`,
+        choices: [
+          { text: "Show the key to the figure", next: "showkey" },
+          { text: "Run back downstairs", next: "livingroom" }
+        ]
+      },
+      showkey: {
+        text: `You show the key to the figure. It shrieks and vanishes into thin air. A hidden door opens at the end of the hallway.
+<br><br>
+Do you enter the hidden door?`,
+        choices: [
+          { text: "Enter the hidden door", next: "treasure" },
+          { text: "Go back downstairs", next: "livingroom" }
+        ]
+      },
+      treasure: {
+        text: `Inside, you find a room filled with ancient treasures and a diary revealing the house's secrets. You take some gold and leave safely.
+<br><br>
+<b>Ending: Rich and alive. The curse is broken!</b>`,
+        choices: [
+          { text: "Restart", next: "start" }
+        ]
+      },
+      ghosttalk: {
+        text: `You try to speak, but the figure lets out a terrifying scream. Everything goes black.
+<br><br>
+<b>Ending: Claimed by the ghost.</b>`,
+        choices: [
+          { text: "Restart", next: "start" }
+        ]
+      }
+    };
+
+    let currentNode = "start";
+
+    function showNode(nodeName) {
+      const node = story[nodeName];
+      document.getElementById("storyBox").innerHTML = node.text;
+      const choicesDiv = document.getElementById("choices");
+      choicesDiv.innerHTML = '';
+      node.choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.className = "choiceBtn";
+        btn.innerText = choice.text;
+        btn.onclick = () => {
+          currentNode = choice.next;
+          showNode(currentNode);
+        };
+        choicesDiv.appendChild(btn);
+      });
+    }
+
+    function startStory() {
+      document.getElementById("startMenu").style.display = "none";
+      currentNode = "start";
+      showNode(currentNode);
+    }
+
+    window.onload = function() {
+      document.getElementById("startBtn").onclick = startStory;
+      // Show splash art when not started
+      document.getElementById("storyBox").innerHTML = `
+        <span style="font-size:1.3em;color:#ffff33;">Welcome to LemonzGhost: Interactive Horror Story</span><br>
+        <span style="color:#fff;">Press Start to begin your adventure...</span>
+      `;
+      document.getElementById("choices").innerHTML = "";
+    };
+  </script>
+</body>
+</html>

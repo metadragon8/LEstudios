@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LemonzGG Uno 🍋 - Full Version</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin:0; padding:20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #fffde7, #fff59d);
+    color: #333;
+    user-select: none;
+  }
+  h1 {
+    color: #fbc02d;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  button {
+    background: #fbc02d;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px 5px;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background: #f9a825;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  #startArea, #colorPicker, #unoButtonArea {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  #colorPicker button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  #colorPicker button.red { background: #e53935; }
+  #colorPicker button.green { background: #43a047; }
+  #colorPicker button.blue { background: #1e88e5; }
+  #colorPicker button.yellow { background: #fbc02d; color: #333; }
+  #gameArea {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  #info {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+  #timer {
+    font-size: 1.1rem;
+    color: #555;
+  }
+  #centerCard {
+    margin: 20px auto;
+    width: 90px;
+    height: 130px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 2rem;
+    color: #fff;
+    user-select: none;
+  }
+  #playerHand, #otherPlayers {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .card {
+    width: 70px;
+    height: 100px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    font-size: 1.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+  }
+  .card:hover {
+    transform: scale(1.1);
+    z-index: 2;
+  }
+  .red { background-color: #e53935; }
+  .green { background-color: #43a047; }
+  .blue { background-color: #1e88e5; }
+  .yellow { background-color: #fbc02d; color: #333; }
+  .wild {
+    background: linear-gradient(45deg, #e53935, #1e88e5, #43a047, #fbc02d);
+    color: black;
+    font-size: 1.1rem;
+  }
+  .hiddenCard {
+    background: #ccc;
+    cursor: default;
+  }
+  #otherPlayers {
+    margin-bottom: 25px;
+  }
+  .playerArea {
+    margin-bottom: 20px;
+  }
+  .playerLabel {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  #message {
+    text-align: center;
+    font-size: 1.3rem;
+    margin-top: 15px;
+    font-weight: 700;
+  }
+  #unoButtonArea {
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>LemonzGG Uno 🍋</h1>
+<div id="startArea">
+  <label for="numPlayers">Select number of players (2-4): </label>
+  <select id="numPlayers">
+    <option value="2" selected>2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select>
+  <button id="startBtn">Start Game</button>
+</div>
+
+<div id="gameArea">
+  <div id="info"></div>
+  <div id="timer">Time left: 15:00</div>
+
+  <div id="otherPlayers"></div>
+
+  <div id="centerCard"></div>
+
+  <div class="playerArea">
+    <div class="playerLabel">Your Cards</div>
+    <div id="playerHand"></div>
+    <div id="unoButtonArea">
+      <button id="unoButton" disabled>UNO!</button>
+    </div>
+    <button id="drawCardBtn">Draw Card</button>
+  </div>
+
+  <div id="colorPicker" style="display:none;">
+    <p>Pick a color for Wild card:</p>
+    <button class="red"></button>
+    <button class="green"></button>
+    <button class="blue"></button>
+    <button class="yellow"></button>
+  </div>
+
+  <div id="message"></div>
+</div>
+
+<script>
+(() => {
+  const colors = ["red", "green", "blue", "yellow"];
+  const values = ["0","1","2","3","4","5","6","7","8","9","Skip","Reverse","+2"];
+  let deck = [], discardPile = [];
+  let players = []; // Array of hands (array of cards)
+  let currentPlayer = 0;
+  let direction = 1; // 1 = clockwise, -1 = counter-clockwise
+  let centerCard = null;
+  let gameOver = false;
+  let waitingForColor = false;
+  let unoCalled = [];
+  let numPlayers = 2;
+  let timerDuration = 15 * 60; // 15 minutes in seconds
+  let timerInterval = null;
+
+  // HTML elements
+  const startArea = document.getElementById('startArea');
+  const startBtn = document.getElementById('startBtn');
+  const gameArea = document.getElementById('gameArea');
+  const playerHandDiv = document.getElementById('playerHand');
+  const otherPlayersDiv = document.getElementById('otherPlayers');
+  const centerCardDiv = document.getElementById('centerCard');
+  const infoDiv = document.getElementById('info');
+  const timerDiv = document.getElementById('timer');
+  const drawCardBtn = document.getElementById('drawCardBtn');
+  const colorPickerDiv = document.getElementById('colorPicker');
+  const messageDiv = document.getElementById('message');
+  const unoButton = document.getElementById('unoButton');
+
+  function shuffle(array) {
+    for(let i = array.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function createDeck() {
+    let d = [];
+    colors.forEach(color => {
+      values.forEach(value => {
+        d.push({color, value});
+        if (value !== "0") d.push({color, value});
+      });
+    });
+    for(let i=0;i<4;i++) {
+      d.push({color:"wild", value:"Wild"});
+      d.push({color:"wild", value:"+4"});
+    }
+    return shuffle(d);
+  }
+
+  function cardMatches(card1, card2) {
+    return card1.color === card2.color || card1.value === card2.value || card1.color === "wild";
+  }
+
+  function nextPlayerIndex() {
+    return (currentPlayer + direction + numPlayers) % numPlayers;
+  }
+
+  function drawFromDeck() {
+    if(deck.length === 0) {
+      let top = discardPile.pop();
+      deck = shuffle(discardPile);
+      discardPile = [top];
+    }
+    return deck.pop();
+  }
+
+  function updateUI() {
+    if(gameOver) return;
+
+    // Show timer
+    const minutes = Math.floor(timerDuration / 60);
+    const seconds = timerDuration % 60;
+    timerDiv.textContent = `Time left: ${minutes.toString().padStart(2,"0")}:${seconds.toString().padStart(2,"0")}`;
+
+    // Center card display
+    centerCardDiv.textContent = "";
+    const c = document.createElement("div");
+    c.className = "card " + centerCard.color;
+    c.textContent = centerCard.value;
+    centerCardDiv.appendChild(c);
+
+    // Info: who's turn
+    if(currentPlayer === 0) {
+      infoDiv.textContent = "Your turn";
+      drawCardBtn.disabled = false;
+      unoButton.disabled = players[0].length !== 1;
+    } else {
+      infoDiv.textContent = `Player ${currentPlayer + 1}'s turn (CPU)`;
+      drawCardBtn.disabled = true;
+      unoButton.disabled = true;
+    }
+
+    // Player's hand
+    playerHandDiv.innerHTML = "";
+    players[0].forEach((card, index) => {
+      const cardDiv = document.createElement("div");
+      cardDiv.className = "card " + card.color;
+      cardDiv.textContent = card.value;
+      cardDiv.title = card.color + " " + card.value;
+      cardDiv.onclick = () => {
+        if(currentPlayer !== 0 || waitingForColor || gameOver) return;
+        if(canPlayCard(card)) {
+          playCard(0, index);
+        } else {
+          messageDiv.textContent = "You can't play this card!";
+          setTimeout(() => messageDiv.textContent = "", 2000);
+        }
+      };
+      playerHandDiv.appendChild(cardDiv);
+    });
+
+    // Other players - show number of cards (hidden)
+    otherPlayersDiv.innerHTML = "";
+    for(let i=1; i<numPlayers; i++) {
+      const pDiv = document.createElement("div");
+      pDiv.className = "playerArea";
+      const label = document.createElement("div");
+      label.className = "playerLabel";
+      label.textContent = `Player ${i + 1} Cards: ${players[i].length}`;
+      pDiv.appendChild(label);
+      const cardsDiv = document.createElement("div");
+      for(let j=0; j<players[i].length; j++) {
+        const hiddenCard = document.createElement("div");
+        hiddenCard.className = "card hiddenCard";
+        cardsDiv.appendChild(hiddenCard);
+      }
+      pDiv.appendChild(cardsDiv);
+      otherPlayersDiv.appendChild(pDiv);
+    }
+  }
+
+  function canPlayCard(card) {
+    return card.color === centerCard.color || card.value === centerCard.value || card.color === "wild";
+  }
+
+  function playCard(playerIdx, cardIdx) {
+    let card = players[playerIdx][cardIdx];
+    players[playerIdx].splice(cardIdx, 1);
+    discardPile.push(card);
+    centerCard = card;
+    updateUI();
+    unoCalled[playerIdx] = false; // Reset UNO call for this player
+
+    // Handle special cards
+    if(card.color === "wild") {
+  if(playerIdx === 0) {
+    waitingForColor = true;
+    colorPickerDiv.style.display = "block";
+    infoDiv.textContent = "Pick a color for your Wild card";
+    drawCardBtn.disabled = true;
+    unoButton.disabled = true;
+    return;
+  } else {
+    // برای CPU رنگ به صورت تصادفی انتخاب میشه
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    centerCard.color = randomColor;
+    infoDiv.textContent = `CPU chose ${randomColor} color`;
+  }
+} else {
+      waitingForColor = false;
+    }
+
+    // Check for UNO call opportunity
+    if(players[playerIdx].length === 1 && playerIdx === 0) {
+      unoButton.disabled = false;
+    } else {
+      unoButton.disabled = true;
+    }
+
+    // Check for winner
+    if(players[playerIdx].length === 0) {
+      endGame(playerIdx);
+      return;
+    }
+
+    // Apply card effects
+    applyCardEffect(card, playerIdx);
+
+    // Move to next player
+    if(!gameOver) {
+      currentPlayer = nextPlayerIndex();
+      updateUI();
+      if(currentPlayer !== 0) {
+        setTimeout(cpuTurn, 1000);
+      }
+    }
+  }
+
+  function applyCardEffect(card, playerIdx) {
+    switch(card.value) {
+      case "Skip":
+        currentPlayer = nextPlayerIndex(); // skip next player
+        break;
+      case "Reverse":
+        direction *= -1;
+        // If 2 players, Reverse acts like Skip (skip opponent's turn)
+        if(numPlayers === 2) currentPlayer = nextPlayerIndex();
+        break;
+      case "+2":
+        let nextIdx = nextPlayerIndex();
+        for(let i=0; i<2; i++) {
+          players[nextIdx].push(drawFromDeck());
+        }
+        break;
+      case "+4":
+        let nextIdx4 = nextPlayerIndex();
+        for(let i=0; i<4; i++) {
+          players[nextIdx4].push(drawFromDeck());
+        }
+        break;
+    }
+  }
+
+  function cpuTurn() {
+    if(gameOver) return;
+    let hand = players[currentPlayer];
+    // Try to play a card
+    let playableIdx = hand.findIndex(card => canPlayCard(card));
+    if(playableIdx !== -1) {
+      playCard(currentPlayer, playableIdx);
+    } else {
+      // Draw card if no playable
+      hand.push(drawFromDeck());
+      updateUI();
+      // If the drawn card is playable, play it immediately
+      if(canPlayCard(hand[hand.length-1])) {
+        playCard(currentPlayer, hand.length-1);
+      } else {
+        currentPlayer = nextPlayerIndex();
+        updateUI();
+        if(currentPlayer === 0) {
+          // Your turn now
+        } else {
+          setTimeout(cpuTurn, 1000);
+        }
+      }
+    }
+  }
+
+  function endGame(winnerIdx) {
+    gameOver = true;
+    updateUI();
+    if(winnerIdx === 0) {
+      messageDiv.textContent = "🎉 Congratulations! You won!";
+    } else {
+      messageDiv.textContent = `Player ${winnerIdx + 1} won! Better luck next time!`;
+    }
+    drawCardBtn.disabled = true;
+    unoButton.disabled = true;
+    colorPickerDiv.style.display = "none";
+    clearInterval(timerInterval);
+  }
+
+  // UNO button pressed
+  unoButton.onclick = () => {
+    if(players[0].length === 1) {
+      unoCalled[0] = true;
+      unoButton.disabled = true;
+      messageDiv.textContent = "You called UNO!";
+      setTimeout(() => messageDiv.textContent = "", 2000);
+    }
+  };
+
+  // Draw card button
+  drawCardBtn.onclick = () => {
+    if(gameOver || currentPlayer !== 0 || waitingForColor) return;
+    let card = drawFromDeck();
+    players[0].push(card);
+    updateUI();
+    // If drawn card playable, optionally can play (or wait for next turn)
+    drawCardBtn.disabled = true;
+    unoButton.disabled = players[0].length === 1 ? false : true;
+messageDiv.textContent = "";
+};
+
+// Color picker buttons
+colorPickerDiv.querySelectorAll("button").forEach(btn => {
+  btn.onclick = () => {
+    if(!waitingForColor) return;
+    centerCard.color = btn.className; // Set chosen color
+    waitingForColor = false;
+    colorPickerDiv.style.display = "none";
+    infoDiv.textContent = "";
+    drawCardBtn.disabled = currentPlayer !== 0;
+    unoButton.disabled = players[0].length !== 1;
+
+    // After choosing color, apply any effects from wild cards
+    if(centerCard.value === "+4") {
+      let nextIdx = nextPlayerIndex();
+      for(let i=0; i<4; i++) {
+        players[nextIdx].push(drawFromDeck());
+      }
+    }
+
+    // Move to next player
+    currentPlayer = nextPlayerIndex();
+    updateUI();
+    if(currentPlayer !== 0) {
+      setTimeout(cpuTurn, 1000);
+    }
+  };
+});
+
+// Start game button
+startBtn.onclick = () => {
+  numPlayers = parseInt(document.getElementById("numPlayers").value);
+  startGame();
+};
+
+function startGame() {
+  deck = createDeck();
+  discardPile = [];
+  players = [];
+  unoCalled = Array(numPlayers).fill(false);
+  currentPlayer = 0;
+  direction = 1;
+  gameOver = false;
+  waitingForColor = false;
+  messageDiv.textContent = "";
+  timerDuration = 15 * 60;
+  clearInterval(timerInterval);
+
+  // Deal cards
+  for(let i=0; i<numPlayers; i++) {
+    players.push([]);
+    for(let j=0; j<7; j++) {
+      players[i].push(drawFromDeck());
+    }
+  }
+
+  // Flip initial center card - must not be wild or special
+  do {
+    centerCard = drawFromDeck();
+    discardPile.push(centerCard);
+  } while(centerCard.color === "wild" || ["Skip","Reverse","+2","+4","Wild"].includes(centerCard.value));
+
+  startArea.style.display = "none";
+  gameArea.style.display = "block";
+
+  updateUI();
+
+  timerInterval = setInterval(() => {
+    if(timerDuration > 0) {
+      timerDuration--;
+      updateUI();
+    } else {
+      clearInterval(timerInterval);
+      messageDiv.textContent = "⏰ Time's up! Game over.";
+      gameOver = true;
+      drawCardBtn.disabled = true;
+      unoButton.disabled = true;
+      colorPickerDiv.style.display = "none";
+    }
+  }, 1000);
+}
+
+})();
+</script>
+
+</body>
+</html>
+    

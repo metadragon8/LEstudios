@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Dark Flappy Lemonz</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Arial', sans-serif;
+      touch-action: manipulation;
+    }
+    #game-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      background: radial-gradient(circle at center, #111 0%, #000 100%);
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #111;
+    }
+    #menu, #gameover, #jumpscare {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0,0,0,0.85);
+      z-index: 10;
+      color: white;
+    }
+    #menu h1 {
+      font-size: 4vw;
+      color: #f00;
+      text-shadow: 2px 2px 10px #f00;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 1.2em;
+      background: #900;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 1em;
+      box-shadow: 0 0 10px red;
+    }
+    #score-display {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 1.5em;
+      color: red;
+      text-shadow: 1px 1px 3px black;
+      z-index: 5;
+      display: none;
+    }
+    #jumpscare {
+      background: black;
+      z-index: 100;
+      display: none;
+    }
+    #jumpscare video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="menu">
+      <h1>Dark Flappy Lemonz 🍋💀</h1>
+      <button id="startBtn">Start Game</button>
+    </div>
+
+    <div id="gameover" style="display:none;">
+      <h2>💀 You Died</h2>
+      <p id="finalScoreText"></p>
+      <button id="restartBtn">Try Again</button>
+    </div>
+
+    <div id="jumpscare">
+      <video id="jumpscareVideo" preload="auto" controls>
+        <source src="5_FNAF_Best_Jumpscares_V3.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <div id="score-display">Score: 0</div>
+
+    <audio id="bgm" loop>
+      <source src="daisy-(creepy-version-0-0)-made-with-Voicemod.mp3" type="audio/mpeg" />
+    </audio>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const menu = document.getElementById('menu');
+    const gameover = document.getElementById('gameover');
+    const jumpscare = document.getElementById('jumpscare');
+    const jumpscareVideo = document.getElementById('jumpscareVideo');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const finalScoreText = document.getElementById('finalScoreText');
+    const scoreDisplay = document.getElementById('score-display');
+    const bgm = document.getElementById('bgm');
+
+    let lemonSize = 30;
+    const gravity = 0.25;
+    const jumpPower = -6;
+    const pipeWidth = 50;
+    const pipeGap = 220;
+    let lemonX = 100;
+    let lemonY = 200;
+    let velocity = 0;
+    let pipes = [];
+    let score = 0;
+    let isPlaying = false;
+    let animationId;
+
+    
+    let canJump = true;
+    const jumpCooldown = 150; 
+
+    let bgmStarted = false;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function drawLemon() {
+      const angle = Math.min(Math.max(velocity * 0.1, -0.5), 0.5);
+      ctx.save();
+      ctx.translate(lemonX + lemonSize / 2, lemonY + lemonSize / 2);
+      ctx.rotate(angle);
+      ctx.fillStyle = "#f4d35e";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, lemonSize / 2, lemonSize / 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f00";
+      ctx.beginPath();
+      ctx.arc(-8, -5, 3, 0, Math.PI * 2);
+      ctx.arc(8, -5, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#900";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 5, 10, 0, Math.PI);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function createPipe() {
+      const top = Math.random() * (canvas.height / 2) + 50;
+      return { x: canvas.width, topHeight: top, passed: false };
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "#222";
+      pipes.forEach(p => {
+        ctx.fillRect(p.x, 0, pipeWidth, p.topHeight);
+        ctx.fillRect(p.x, p.topHeight + pipeGap, pipeWidth, canvas.height);
+      });
+    }
+
+    function updateGame() {
+      velocity += gravity;
+      lemonY += velocity;
+      pipes.forEach(p => p.x -= 2);
+
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width * 0.6) {
+        pipes.push(createPipe());
+      }
+
+      pipes.forEach(p => {
+        if (!p.passed && p.x + pipeWidth < lemonX) {
+          p.passed = true;
+          score++;
+          scoreDisplay.textContent = "Score: " + score;
+        }
+      });
+
+      if (lemonY > canvas.height || lemonY < 0 || hitPipe()) {
+        showJumpscare();
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPipes();
+      drawLemon();
+
+      animationId = requestAnimationFrame(updateGame);
+    }
+
+    function hitPipe() {
+      return pipes.some(p => {
+        const hitX = lemonX + lemonSize > p.x && lemonX < p.x + pipeWidth;
+        const hitY = lemonY < p.topHeight || lemonY + lemonSize > p.topHeight + pipeGap;
+        return hitX && hitY;
+      });
+    }
+
+    function startGame() {
+      lemonY = canvas.height / 2;
+      lemonX = canvas.width * 0.2;
+      velocity = 0;
+      pipes = [];
+      score = 0;
+      isPlaying = true;
+      scoreDisplay.style.display = "block";
+      scoreDisplay.textContent = "Score: 0";
+      menu.style.display = "none";
+      gameover.style.display = "none";
+      cancelAnimationFrame(animationId);
+      updateGame();
+    }
+
+    function showJumpscare() {
+      isPlaying = false;
+      cancelAnimationFrame(animationId);
+      scoreDisplay.style.display = "none";
+
+      
+      bgm.pause();
+      bgm.currentTime = 0;
+
+      jumpscare.style.display = "flex";
+
+      
+      jumpscareVideo.pause();
+      jumpscareVideo.currentTime = 0;
+
+      jumpscareVideo.onended = () => {
+        jumpscare.style.display = "none";
+        gameover.style.display = "flex";
+        finalScoreText.textContent = `Your Score: ${score}`;
+      };
+
+      jumpscareVideo.play().catch(err => {
+        console.log("Error playing jumpscare video:", err);
+        
+        jumpscare.style.display = "none";
+        gameover.style.display = "flex";
+        finalScoreText.textContent = `Your Score: ${score}`;
+      });
+    }
+
+    function jump() {
+      if (isPlaying && canJump) {
+        velocity = jumpPower;
+        canJump = false;
+        setTimeout(() => {
+          canJump = true;
+        }, jumpCooldown);
+      }
+    }
+
+    
+    function tryStartBGM() {
+      if (!bgmStarted) {
+        bgm.play().then(() => {
+          bgmStarted = true;
+          console.log("BGM started");
+        }).catch(err => {
+          console.log("BGM play error:", err);
+        });
+      }
+    }
+
+    startBtn.onclick = () => {
+      tryStartBGM();
+      startGame();
+    };
+
+    restartBtn.onclick = () => {
+      tryStartBGM();
+      startGame();
+    };
+
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        jump();
+        tryStartBGM();
+      }
+    });
+    window.addEventListener("mousedown", () => {
+      jump();
+      tryStartBGM();
+    });
+    window.addEventListener("touchstart", () => {
+      jump();
+      tryStartBGM();
+    });
+  </script>
+</body>
+</html>

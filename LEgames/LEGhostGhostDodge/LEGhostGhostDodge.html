@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LemonzGhost: Ghost Dodge (Dark Edition)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body, html {
+      background: linear-gradient(180deg, #111 0%, #181818 100%);
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      margin-top: 18px;
+      font-size: 2em;
+      color: #ff3434;
+      text-shadow: 0 0 18px #222, 0 0 28px #ff0000;
+      letter-spacing: .04em;
+    }
+    #gameCanvas {
+      background: radial-gradient(ellipse at center, #1a161a 70%, #000 100%);
+      border: 2px solid #ff3434;
+      border-radius: 22px;
+      box-shadow: 0 0 45px #000, 0 0 120px #ff0000 inset;
+      max-width: 98vw;
+      max-height: 50vh;
+      width: 430px;
+      height: 300px;
+      touch-action: none;
+      margin-top: 24px;
+      overflow: hidden;
+    }
+    #gameOver {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 54%;
+      transform: translate(-50%, -50%);
+      background: rgba(20,0,0,0.97);
+      color: #fff;
+      padding: 26px 33px;
+      border-radius: 16px;
+      font-size: 1.35em;
+      z-index: 99;
+      box-shadow: 0 0 55px #ff0000, 0 0 120px #000 inset;
+      text-align: center;
+    }
+    #gameOver button {
+      padding: 12px 38px;
+      font-size: 1.1em;
+      border-radius: 9px;
+      border: 2px solid #ff3434;
+      background: #222;
+      color: #ff3434;
+      margin-top: 18px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #222;
+      transition: 0.2s;
+    }
+    #gameOver button:active {
+      background: #ff3434;
+      color: #222;
+      border-color: #fff;
+    }
+    #startMenu {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(12,12,16,0.99);
+      z-index: 100;
+      box-shadow: 0 0 120px #000 inset;
+    }
+    #startMenu h2 {
+      font-size: 2em;
+      margin-bottom: 12px;
+      color: #ff3434;
+      text-shadow: 0 0 16px #fff, 0 0 22px #ff0000;
+    }
+    #startMenu button {
+      padding: 18px 45px;
+      font-size: 1.2em;
+      border-radius: 12px;
+      border: 2px solid #ff3434;
+      background: #222;
+      color: #ff3434;
+      margin-top: 18px;
+      cursor: pointer;
+      box-shadow: 0 0 18px #222;
+      transition: 0.2s;
+    }
+    #startMenu button:active {
+      background: #ff3434;
+      color: #222;
+      border-color: #fff;
+    }
+    #controls {
+      display: none;
+      position: fixed;
+      bottom: 4vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      gap: 2vw;
+      user-select: none;
+    }
+    .arrow-btn {
+      background: #222;
+      color: #ff3434;
+      border: 2px solid #ff3434;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      font-size: 2.1em;
+      margin: 5px;
+      opacity: 0.92;
+      box-shadow: 0 0 14px #000, 0 0 16px #ff3434 inset;
+      touch-action: manipulation;
+      user-select: none;
+      transition: 0.18s;
+    }
+    .arrow-btn:active {
+      background: #ff3434;
+      color: #181818;
+      border-color: #fff;
+      box-shadow: 0 0 18px #ff3434;
+    }
+    @media (max-width: 600px) {
+      #gameCanvas {
+        width: 98vw;
+        height: 54vw;
+        max-width: 98vw;
+        max-height: 62vh;
+      }
+      #controls {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+      h1 { font-size: 1.2em; }
+      #startMenu h2 { font-size: 1.2em; }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>LemonzGhost: Ghost Dodge</h1>
+    <canvas id="gameCanvas" width="430" height="300"></canvas>
+    <div id="gameOver">
+      <div id="overText"></div>
+      <button onclick="restartGame()">Restart</button>
+    </div>
+    <div id="startMenu">
+      <h2>Ghost Dodge</h2>
+      <p>
+        Dodge the ghosts for as long as you can.<br>
+        Use arrow keys or buttons to move.<br>
+        The longer you survive, the harder it gets.<br>
+        <span style="color:#ff3434">Can you escape the haunted shadows?</span>
+      </p>
+      <button id="startBtn">Start Game</button>
+    </div>
+    <div id="controls">
+      <button class="arrow-btn" id="leftBtn">&#8592;</button>
+      <button class="arrow-btn" id="upBtn">&#8593;</button>
+      <button class="arrow-btn" id="downBtn">&#8595;</button>
+      <button class="arrow-btn" id="rightBtn">&#8594;</button>
+    </div>
+  </div>
+  <script>
+    // Responsive canvas
+    function resizeCanvas() {
+      const canvas = document.getElementById('gameCanvas');
+      if (window.innerWidth < 600) {
+        canvas.width = window.innerWidth * 0.98;
+        canvas.height = window.innerWidth * 0.54;
+      } else {
+        canvas.width = 430;
+        canvas.height = 300;
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let isMobile = window.innerWidth < 600;
+    resizeCanvas();
+
+    // Controls
+    const keys = {};
+    document.addEventListener('keydown', e => { keys[e.key] = true; });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    // Touch controls
+    function setupTouchControls() {
+      if (window.innerWidth < 600) {
+        document.getElementById('controls').style.display = 'flex';
+        document.getElementById('upBtn').ontouchstart = () => keys['ArrowUp'] = true;
+        document.getElementById('upBtn').ontouchend = () => keys['ArrowUp'] = false;
+        document.getElementById('downBtn').ontouchstart = () => keys['ArrowDown'] = true;
+        document.getElementById('downBtn').ontouchend = () => keys['ArrowDown'] = false;
+        document.getElementById('leftBtn').ontouchstart = () => keys['ArrowLeft'] = true;
+        document.getElementById('leftBtn').ontouchend = () => keys['ArrowLeft'] = false;
+        document.getElementById('rightBtn').ontouchstart = () => keys['ArrowRight'] = true;
+        document.getElementById('rightBtn').ontouchend = () => keys['ArrowRight'] = false;
+      } else {
+        document.getElementById('controls').style.display = 'none';
+      }
+    }
+    setupTouchControls();
+    window.addEventListener('resize', setupTouchControls);
+
+    // Game state
+    let player, ghosts, gameOver, startTime, score, ghostSpeed, ghostInterval, nextGhostTime, difficultyTimer;
+    let gameStarted = false;
+
+    function resetGameState() {
+      const w = canvas.width, h = canvas.height;
+      player = {
+        x: w/2, y: h/2,
+        size: Math.max(14, w/30),
+        color: "#ffff33",
+        speed: Math.max(2.3, w/120)
+      };
+      ghosts = [];
+      gameOver = false;
+      score = 0;
+      ghostSpeed = Math.max(2.1, w/180);
+      ghostInterval = 950;
+      nextGhostTime = performance.now() + 1100;
+      startTime = performance.now();
+      difficultyTimer = performance.now();
+    }
+
+    // Helper: random between min/max
+    function rand(min,max) { return Math.random()*(max-min)+min; }
+
+    // Spawn a new ghost at random edge with fixed direction
+    function spawnGhost() {
+      const w = canvas.width, h = canvas.height;
+      // Random edge: 0=top, 1=bottom, 2=left, 3=right
+      const edge = Math.floor(Math.random()*4);
+      let x, y, dx=0, dy=0;
+      if(edge==0){ // top
+        x=rand(26,w-26); y=-28; dx=rand(-0.3,0.3); dy=1;
+      }
+      else if(edge==1){ // bottom
+        x=rand(26,w-26); y=h+28; dx=rand(-0.3,0.3); dy=-1;
+      }
+      else if(edge==2){ // left
+        x=-28; y=rand(26,h-26); dx=1; dy=rand(-0.3,0.3);
+      }
+      else{ // right
+        x=w+28; y=rand(26,h-26); dx=-1; dy=rand(-0.3,0.3);
+      }
+      // Normalize direction
+      let len = Math.sqrt(dx*dx+dy*dy);
+      dx /= len; dy /= len;
+      ghosts.push({
+        x, y,
+        size: Math.max(18, w/24),
+        color: "#fff",
+        speed: ghostSpeed + rand(0,0.8),
+        dx, dy,
+        faceAngle: rand(-0.22,0.22)
+      });
+    }
+
+    // Draw player
+    function drawPlayer() {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.size, 0, Math.PI*2);
+      ctx.fillStyle = player.color;
+      ctx.shadowColor = "#ffff33";
+      ctx.shadowBlur = 11;
+      ctx.globalAlpha = 1;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    // Draw ghost (scarier face)
+    function drawGhost(g) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.size, 0, Math.PI*2);
+      ctx.fillStyle = g.color;
+      ctx.shadowColor = "#ff3434";
+      ctx.shadowBlur = 16;
+      ctx.globalAlpha = 0.93;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.rotate(g.faceAngle);
+      // Eyes (red glowing)
+      ctx.beginPath();
+      ctx.arc(-g.size/3.2, -g.size/3.1, g.size/7, 0, Math.PI*2);
+      ctx.arc(g.size/3.2, -g.size/3.1, g.size/7, 0, Math.PI*2);
+      ctx.fillStyle = "#ff3434";
+      ctx.shadowColor = "#ff0000";
+      ctx.shadowBlur = 16;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Mouth (open scary)
+      ctx.beginPath();
+      ctx.ellipse(0, g.size/4.2, g.size/3.2, g.size/7, 0, 0, Math.PI*2);
+      ctx.fillStyle = "#222";
+      ctx.fill();
+      // Fangs
+      ctx.beginPath();
+      ctx.moveTo(-g.size/8, g.size/4.2);
+      ctx.lineTo(-g.size/12, g.size/3.8);
+      ctx.lineTo(0, g.size/4.2);
+      ctx.lineTo(g.size/12, g.size/3.8);
+      ctx.lineTo(g.size/8, g.size/4.2);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+      ctx.restore();
+    }
+
+    // Move player
+    function movePlayer() {
+      if (keys['ArrowUp'] || keys['w']) player.y -= player.speed;
+      if (keys['ArrowDown'] || keys['s']) player.y += player.speed;
+      if (keys['ArrowLeft'] || keys['a']) player.x -= player.speed;
+      if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
+      // Boundaries
+      player.x = Math.max(player.size, Math.min(canvas.width-player.size, player.x));
+      player.y = Math.max(player.size, Math.min(canvas.height-player.size, player.y));
+    }
+
+    // Move ghosts (only straight)
+    function moveGhosts() {
+      ghosts.forEach(g=>{
+        g.x += g.speed * g.dx;
+        g.y += g.speed * g.dy;
+        g.faceAngle += rand(-0.07,0.07);
+        if(g.faceAngle>0.22) g.faceAngle = 0.22;
+        if(g.faceAngle<-0.22) g.faceAngle = -0.22;
+      });
+      // Remove ghosts that have gone far outside canvas
+      for(let i=ghosts.length-1;i>=0;i--){
+        let g=ghosts[i];
+        if(g.x<-48||g.x>canvas.width+48||g.y<-48||g.y>canvas.height+48){
+          ghosts.splice(i,1);
+        }
+      }
+    }
+
+    // Check collision
+    function checkCollision() {
+      for(let g of ghosts){
+        const dx = player.x - g.x, dy = player.y - g.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < player.size + g.size - 4){
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Draw HUD
+    function drawHUD() {
+      ctx.save();
+      ctx.font = Math.max(17, canvas.width/32) + 'px Arial';
+      ctx.fillStyle = "#fff";
+      ctx.shadowColor = "#ff3434";
+      ctx.shadowBlur = 12;
+      ctx.fillText('Survival Time: ' + Math.floor(score/10)/100 + ' s', 18, 34);
+      ctx.fillStyle = "#ff3434";
+      ctx.shadowBlur = 0;
+      ctx.font = Math.max(12, canvas.width/40) + 'px Arial';
+      ctx.fillText('Use arrow keys or buttons to move', 18, canvas.height-18);
+      ctx.restore();
+    }
+
+    // Draw background (fog, shadows)
+    function drawBackground() {
+      ctx.save();
+      // Fog
+      for(let i=0;i<5;i++){
+        ctx.globalAlpha=0.09;
+        ctx.fillStyle="#ff3434";
+        ctx.beginPath();
+        ctx.arc(rand(0,canvas.width),rand(0,canvas.height),rand(50,120),0,Math.PI*2);
+        ctx.fill();
+      }
+      // Dark shadows
+      ctx.globalAlpha=0.11;
+      ctx.fillStyle="#000";
+      ctx.beginPath();
+      ctx.ellipse(canvas.width/2,canvas.height-12,canvas.width/2,32,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.restore();
+    }
+
+    // Main draw
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      drawPlayer();
+      ghosts.forEach(drawGhost);
+      drawHUD();
+    }
+
+    function gameLoop() {
+      if (gameOver || !gameStarted) return;
+      movePlayer();
+      moveGhosts();
+      if (checkCollision()) {
+        endGame();
+        return;
+      }
+      draw();
+      score = Math.floor(performance.now() - startTime);
+      // Spawn ghosts
+      if(performance.now() > nextGhostTime){
+        spawnGhost();
+        nextGhostTime = performance.now() + ghostInterval;
+      }
+      // Increase difficulty
+      if(performance.now() - difficultyTimer > 3900){
+        ghostSpeed += 0.4;
+        if(ghostInterval>290) ghostInterval -= 65;
+        difficultyTimer = performance.now();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    function endGame() {
+      gameOver = true;
+      document.getElementById('gameOver').style.display = 'block';
+      document.getElementById('overText').innerHTML =
+        'Game Over<br>Survival Time: <span style="color:#ff3434">' +
+        (Math.floor(score/10)/100) + ' s</span>';
+    }
+
+    window.restartGame = function() {
+      document.getElementById('gameOver').style.display = 'none';
+      resetGameState();
+      draw();
+      gameStarted = true;
+      requestAnimationFrame(gameLoop);
+    };
+
+    function showStartMenu(){
+      document.getElementById('startMenu').style.display="flex";
+      document.getElementById('gameOver').style.display="none";
+      gameStarted = false;
+      drawSplash();
+    }
+    function hideStartMenu(){
+      document.getElementById('startMenu').style.display="none";
+      gameStarted = true;
+    }
+    function drawSplash(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      drawBackground();
+      ctx.font = Math.max(30, canvas.width/11) + 'px Arial';
+      ctx.fillStyle = '#ff3434';
+      ctx.shadowColor="#ff0000";
+      ctx.shadowBlur=22;
+      ctx.textAlign = "center";
+      ctx.fillText('Ghost Dodge', canvas.width/2, canvas.height/2 - 32);
+      ctx.font = Math.max(18, canvas.width/28) + 'px Arial';
+      ctx.fillStyle = '#fff';
+      ctx.shadowBlur=0;
+      ctx.fillText('Press Start to play!', canvas.width/2, canvas.height/2 + 24);
+    }
+    function startGame(){
+      hideStartMenu();
+      resetGameState();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.onload = function() {
+      showStartMenu();
+      setupTouchControls();
+      document.getElementById('startBtn').onclick = startGame;
+    };
+    window.addEventListener('resize', ()=>{
+      resizeCanvas();
+      setupTouchControls();
+      if(!gameStarted) drawSplash();
+      else draw();
+    });
+  </script>
+</body>
+</html>

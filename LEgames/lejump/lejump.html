@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LemonzJump</title>
+    <title>LE Jump</title>
     <style>
         body {
             margin: 0;
@@ -107,7 +107,7 @@
         <div id="scoreDisplay">Score: 0</div>
         
         <div id="startMenu">
-            <h1>LemonzJump</h1>
+            <h1>LE Jump</h1>
             <p class="instructions">Help the lemon jump over obstacles! Press SPACE or UP ARROW to jump.</p>
             <button id="startButton">Start Game</button>
         </div>
@@ -120,7 +120,7 @@
     </div>
 
     <script>
-        // Game variables
+        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startMenu = document.getElementById('startMenu');
@@ -130,7 +130,7 @@
         const scoreDisplay = document.getElementById('scoreDisplay');
         const finalScoreDisplay = document.getElementById('finalScore');
         
-        // Set canvas size
+        
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -139,14 +139,14 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         
-        // Game state
+       
         let gameRunning = false;
         let score = 0;
         let highScore = 0;
         let gameSpeed = 5;
         let gravity = 0.5;
         
-        // Lemon properties
+       
         const lemon = {
             x: 100,
             y: 0,
@@ -158,68 +158,68 @@
             frameCount: 0
         };
         
-        // Ground properties
+       
         const ground = {
             height: 20,
             y: canvas.height - 20
         };
         
-        // Obstacles
+        
         let obstacles = [];
         let obstacleTimer = 0;
-        let obstacleInterval = 1500; // milliseconds
+        let obstacleInterval = 1500; 
         
-        // Game loop
+       
         function gameLoop(timestamp) {
             if (!gameRunning) return;
             
-            // Clear canvas
+          
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Update lemon position
+            
             updateLemon();
             
-            // Update obstacles
+           
             updateObstacles();
             
-            // Draw ground
+            
             drawGround();
             
-            // Draw lemon
+           
             drawLemon();
             
-            // Draw obstacles
+           
             drawObstacles();
             
-            // Check collisions
+          
             if (checkCollisions()) {
                 gameOver();
                 return;
             }
             
-            // Update score
+            
             updateScore();
             
-            // Increase difficulty
+            
             increaseDifficulty();
             
             requestAnimationFrame(gameLoop);
         }
         
-        // Update lemon position and animation
+        
         function updateLemon() {
-            // Apply gravity
+            
             lemon.velocityY += gravity;
             lemon.y += lemon.velocityY;
             
-            // Keep lemon above ground
+            
             if (lemon.y + lemon.height > ground.y) {
                 lemon.y = ground.y - lemon.height;
                 lemon.velocityY = 0;
                 lemon.jumping = false;
             }
             
-            // Animation
+          
             lemon.frameCount++;
             if (lemon.frameCount >= 10) {
                 lemon.frame = (lemon.frame + 1) % 4;
@@ -227,20 +227,20 @@
             }
         }
         
-        // Draw lemon with animation
+        
         function drawLemon() {
             ctx.save();
             
-            // Position the lemon
+            
             ctx.translate(lemon.x, lemon.y);
             
-            // Draw lemon body
+            
             ctx.fillStyle = '#ffeb3b';
             ctx.beginPath();
             ctx.ellipse(lemon.width/2, lemon.height/2, lemon.width/2, lemon.height/2, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // Draw lemon texture
+            
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 2;
             for (let i = 0; i < 5; i++) {
@@ -255,46 +255,46 @@
                 ctx.stroke();
             }
             
-            // Draw face (changes based on animation frame)
+            
             ctx.fillStyle = '#333';
             
-            // Eyes
+          
             const eyeY = lemon.height * 0.4;
             const eyeX1 = lemon.width * 0.35;
             const eyeX2 = lemon.width * 0.65;
             
-            // Draw eyes based on frame (blinking animation)
+           
             if (lemon.frame < 3) {
-                // Normal eyes
+               
                 ctx.beginPath();
                 ctx.arc(eyeX1, eyeY, 5, 0, Math.PI * 2);
                 ctx.arc(eyeX2, eyeY, 5, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                // Blinking eyes (frame 3)
+               
                 ctx.fillRect(eyeX1 - 5, eyeY - 2, 10, 4);
                 ctx.fillRect(eyeX2 - 5, eyeY - 2, 10, 4);
             }
             
-            // Mouth - changes based on jumping state
+            
             if (lemon.jumping) {
-                // Surprised mouth
+                
                 ctx.beginPath();
                 ctx.arc(lemon.width/2, lemon.height * 0.6, 8, 0, Math.PI);
                 ctx.fill();
             } else {
-                // Smile
+                
                 ctx.beginPath();
                 ctx.arc(lemon.width/2, lemon.height * 0.6, 8, 0.1 * Math.PI, 0.9 * Math.PI);
                 ctx.fill();
             }
             
-            // Draw arms and legs
+            
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 4;
             ctx.lineCap = 'round';
             
-            // Arms
+          
             const armY = lemon.height * 0.4;
             ctx.beginPath();
             ctx.moveTo(lemon.width * 0.2, armY);
@@ -303,7 +303,7 @@
             ctx.lineTo(lemon.width * 0.9, armY - 10);
             ctx.stroke();
             
-            // Legs
+           
             const legY = lemon.height * 0.8;
             ctx.beginPath();
             ctx.moveTo(lemon.width * 0.3, lemon.height);
@@ -315,12 +315,12 @@
             ctx.restore();
         }
         
-        // Draw ground
+       
         function drawGround() {
             ctx.fillStyle = '#8BC34A';
             ctx.fillRect(0, ground.y, canvas.width, ground.height);
             
-            // Draw some grass details
+            
             ctx.fillStyle = '#689F38';
             for (let x = 0; x < canvas.width; x += 30) {
                 const height = 5 + Math.random() * 10;
@@ -332,24 +332,23 @@
             }
         }
         
-        // Update obstacles
+        
         function updateObstacles() {
-            // Add new obstacles
-            obstacleTimer += 16; // assuming 60fps
+            
+            obstacleTimer += 16; 
             
             if (obstacleTimer >= obstacleInterval) {
                 addObstacle();
                 obstacleTimer = 0;
             }
             
-            // Move and remove off-screen obstacles
             obstacles = obstacles.filter(obstacle => {
                 obstacle.x -= gameSpeed;
                 return obstacle.x + obstacle.width > 0;
             });
         }
         
-        // Add a new obstacle
+        
         function addObstacle() {
             const height = 30 + Math.random() * 50;
             const width = 20 + Math.random() * 40;
@@ -364,15 +363,15 @@
             });
         }
         
-        // Draw obstacles
+        
         function drawObstacles() {
             ctx.fillStyle = '#795548';
             
             obstacles.forEach(obstacle => {
-                // Draw cactus-like obstacle
+               
                 ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
                 
-                // Add some details
+               
                 ctx.fillStyle = '#5D4037';
                 ctx.fillRect(obstacle.x + 5, obstacle.y, 5, obstacle.height);
                 ctx.fillRect(obstacle.x + obstacle.width - 10, obstacle.y, 5, obstacle.height);
@@ -380,7 +379,7 @@
             });
         }
         
-        // Check collisions
+       
         function checkCollisions() {
             const lemonRight = lemon.x + lemon.width;
             const lemonBottom = lemon.y + lemon.height;
@@ -395,14 +394,14 @@
                     lemonBottom > obstacle.y &&
                     lemon.y < obstacleBottom
                 ) {
-                    return true; // collision detected
+                    return true;
                 }
             }
             
             return false;
         }
         
-        // Update score
+       
         function updateScore() {
             obstacles.forEach(obstacle => {
                 if (!obstacle.passed && lemon.x > obstacle.x + obstacle.width) {
@@ -413,13 +412,13 @@
             });
         }
         
-        // Increase difficulty
+       
         function increaseDifficulty() {
             gameSpeed = 5 + Math.floor(score / 10) * 0.5;
             obstacleInterval = Math.max(800, 1500 - Math.floor(score / 5) * 50);
         }
         
-        // Game over
+       
         function gameOver() {
             gameRunning = false;
             finalScoreDisplay.textContent = `Score: ${score}`;
@@ -430,47 +429,47 @@
             }
         }
         
-        // Start game
+       
         function startGame() {
-            // Reset game state
+           
             score = 0;
             obstacles = [];
             obstacleTimer = 0;
             gameSpeed = 5;
             
-            // Reset lemon
+           
             lemon.y = ground.y - lemon.height;
             lemon.velocityY = 0;
             lemon.jumping = false;
             
-            // Update UI
+           
             scoreDisplay.textContent = `Score: ${score}`;
             startMenu.style.display = 'none';
             gameOverMenu.style.display = 'none';
             
-            // Start game loop
+           
             gameRunning = true;
             requestAnimationFrame(gameLoop);
         }
         
-        // Event listeners
+       
         startButton.addEventListener('click', startGame);
         restartButton.addEventListener('click', startGame);
         
-        // Keyboard controls
+        
         document.addEventListener('keydown', (e) => {
             if ((e.code === 'Space' || e.key === 'ArrowUp') && !lemon.jumping && gameRunning) {
                 lemon.velocityY = -12;
                 lemon.jumping = true;
             }
             
-            // Start game with space/up if not running
+            
             if ((e.code === 'Space' || e.key === 'ArrowUp') && !gameRunning && startMenu.style.display === 'flex') {
                 startGame();
             }
         });
         
-        // Touch controls for mobile
+        
         canvas.addEventListener('touchstart', (e) => {
             if (!lemon.jumping && gameRunning) {
                 lemon.velocityY = -12;
@@ -478,7 +477,7 @@
                 e.preventDefault();
             }
             
-            // Start game with touch if not running
+          
             if (!gameRunning && startMenu.style.display === 'flex') {
                 startGame();
                 e.preventDefault();

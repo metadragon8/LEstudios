@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEComputer code - Developer Toolkit</title>
+    
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lemon-yellow: #fde047;
+            --lime-green: #a3e635;
+            --dark-gray: #1f2937;
+            --medium-gray: #6b7280;
+            --light-gray: #f9fafb;
+            --container-bg: #ffffff;
+            --text-color: #374151;
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+            --box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --box-shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--dark-gray) 0%, #000000 100%);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+         .header h1 span {
+            color: var(--lemon-yellow);
+            text-shadow: 0 0 10px rgba(253, 224, 71, 0.5);
+         }
+
+        .container {
+            max-width: 950px;
+            margin: 40px auto;
+            background: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--light-gray);
+            padding: 5px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--medium-gray);
+            transition: all var(--transition-speed) ease;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .tab-button:hover {
+            background-color: #e5e7eb;
+            color: var(--dark-gray);
+        }
+
+        .tab-button.active {
+            color: var(--dark-gray);
+            background: var(--container-bg);
+            box-shadow: var(--box-shadow);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px 40px;
+            animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input, select, textarea {
+            width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: 8px;
+            box-sizing: border-box; font-size: 1rem; font-family: 'Poppins', sans-serif;
+            transition: all var(--transition-speed) ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--lemon-yellow);
+            box-shadow: 0 0 0 4px rgba(253, 224, 71, 0.3);
+        }
+        
+        textarea {
+            resize: vertical; min-height: 140px;
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+        }
+        
+        button {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--dark-gray), #000);
+            color: var(--lemon-yellow); border: none; border-radius: var(--border-radius);
+            cursor: pointer; font-weight: 700; font-size: 1.1rem; text-transform: uppercase;
+            letter-spacing: 1px; transition: all var(--transition-speed) ease; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px); box-shadow: var(--box-shadow-hover);
+        }
+
+        button:disabled {
+            background: var(--medium-gray); cursor: not-allowed; color: #d1d5db;
+        }
+        
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 25px; }
+        .result-header h2 { margin: 0; text-align: left; border: none; padding: 0; }
+        .copy-btn { width: auto; font-size: 0.8rem; padding: 6px 12px; font-weight: 600; background: var(--light-gray); color: var(--medium-gray); border: 1px solid #d1d5db; text-transform: none; letter-spacing: 0; }
+        .copy-btn:hover { background: #e5e7eb; color: var(--dark-gray); transform: none; box-shadow: none; }
+        
+        pre {
+            background-color: #0d1117; color: #c9d1d9; padding: 20px;
+            border-radius: var(--border-radius); white-space: pre-wrap; word-wrap: break-word;
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace; font-size: 0.95rem; border: 1px solid #30363d;
+        }
+
+        h1, h2 { text-align: center; color: var(--dark-gray); }
+
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(253, 224, 71, 0.3); border-top-color: var(--lemon-yellow); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <h1>LEComputer <span>code</span></h1>
+</header>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-button active" onclick="showTab('api-tester')">API Tester</button>
+        
+        <button class="tab-button" onclick="showTab('dep-scanner')">Dependency Scanner</button>
+        <button class="tab-button" onclick="showTab('code-graph')">Code Graph</button>
+    </div>
+
+    <div id="api-tester" class="tab-content active">
+        <h1>LE API Tester</h1>
+        <div class="form-group"><label for="api-method">Method:</label><select id="api-method"><option value="GET">GET</option><option value="POST">POST</option><option value="PUT">PUT</option><option value="DELETE">DELETE</option></select></div>
+        <div class="form-group"><label for="api-url">Endpoint URL:</label><input type="text" id="api-url" placeholder="https://api.example.com/data"></div>
+        <div class="form-group"><label for="api-headers">Headers (JSON):</label><textarea id="api-headers" placeholder='{ "Content-Type": "application/json" }'></textarea></div>
+        <div class="form-group"><label for="api-body">Body (JSON):</label><textarea id="api-body"></textarea></div>
+        <button id="api-send-btn">Send Request</button>
+        <div class="result-header"><h2>Response</h2><button class="copy-btn" data-target="api-response">Copy</button></div>
+        <pre id="api-response">(Results will be shown here)</pre>
+    </div>
+
+    
+
+    <div id="dep-scanner" class="tab-content">
+        <h1>Node.js Dependency Scanner</h1>
+        <p style="text-align: center; color: var(--medium-gray);">Paste your <strong>package.json</strong> content to check for known vulnerabilities.</p>
+        <div class="form-group"><label for="scanner-deps">package.json content:</label><textarea id="scanner-deps" placeholder='{&#10;  "dependencies": {&#10;    "express": "4.17.1",&#10;    "lodash": "4.17.15"&#10;  }&#10;}'></textarea></div>
+        <button id="scanner-scan-btn">Scan Dependencies</button>
+        <div class="result-header"><h2>Results</h2><button class="copy-btn" data-target="scanner-results">Copy</button></div>
+        <pre id="scanner-results">(Scan results will be shown here)</pre>
+    </div>
+
+    <div id="code-graph" class="tab-content">
+        <h1>JavaScript Module Graph</h1>
+        <p style="text-align: center; color: var(--medium-gray);">Visualize your JavaScript module dependencies client-side.</p>
+        <div class="form-group"><label for="graph-code">Source Code:</label><textarea id="graph-code" placeholder="import React from 'react';&#10;import Button from './components/button.js';"></textarea></div>
+        <button id="graph-analyze-btn">Analyze & Draw Graph</button>
+        <div id="graph-container" style="width: 100%; height: 500px; border: 1px solid #e5e7eb; border-radius: var(--border-radius); margin-top: 20px;"></div>
+    </div>
+</div>
+
+<script type="module">
+    const WORKER_URL = "https://cold-salad-9795.lemonzm7.workers.dev"; 
+
+    window.showTab = (tabId) => {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+    };
+
+    const handleRequest = async (button, originalText, asyncFunc) => {
+        const spinner = '<span class="spinner"></span>';
+        button.disabled = true;
+        button.innerHTML = `${spinner}Loading...`;
+        try {
+            await asyncFunc();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    };
+    
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.target;
+            const targetElement = document.getElementById(targetId);
+            navigator.clipboard.writeText(targetElement.textContent).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+            });
+        });
+    });
+
+    const apiSendBtn = document.getElementById('api-send-btn');
+    apiSendBtn.addEventListener('click', () => handleRequest(apiSendBtn, 'Send Request', async () => {
+        const output = document.getElementById('api-response');
+        output.textContent = 'Sending request...';
+        try {
+            const response = await fetch(`${WORKER_URL}/api-tester`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: document.getElementById('api-url').value, method: document.getElementById('api-method').value,
+                    headers: JSON.parse(document.getElementById('api-headers').value || '{}'),
+                    body: document.getElementById('api-body').value ? JSON.parse(document.getElementById('api-body').value) : null
+                })
+            });
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
+            const bodyParsed = JSON.parse(result.body);
+            output.textContent = JSON.stringify({ ...result, body: bodyParsed }, null, 2);
+        } catch (error) {
+            output.textContent = `Error: ${error.message}`;
+        }
+    }));
+
+    const editor = ace.edit("editor");
+    editor.setTheme("ace/theme/tomorrow_night");
+    editor.session.setMode("ace/mode/python");
+    editor.setValue('print("Welcome to LEComputer code!")', 1);
+    editor.renderer.setShowGutter(true);
+    editor.setOptions({ fontfamily: "SF Mono, Consolas, Menlo, monospace", fontSize: "1rem" });
+
+    const runnerLangSelect = document.getElementById('runner-lang');
+    runnerLangSelect.addEventListener('change', () => {
+        const langModeMap = { python3: 'python', nodejs: 'javascript', java: 'java' };
+        editor.session.setMode(`ace/mode/${langModeMap[runnerLangSelect.value]}`);
+    });
+    
+    const runnerRunBtn = document.getElementById('runner-run-btn');
+    runnerRunBtn.addEventListener('click', () => handleRequest(runnerRunBtn, 'Execute', async () => {
+        const output = document.getElementById('runner-output');
+        output.textContent = 'Executing code...';
+        try {
+            const response = await fetch(`${WORKER_URL}/execute`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language: runnerLangSelect.value, code: editor.getValue() })
+            });
+            const result = await response.json();
+            output.textContent = result.output || result.error || "An unknown error occurred.";
+        } catch (error) {
+            output.textContent = `Error: ${error.message}`;
+        }
+    }));
+
+    const scannerScanBtn = document.getElementById('scanner-scan-btn');
+    scannerScanBtn.addEventListener('click', () => handleRequest(scannerScanBtn, 'Scan Dependencies', async () => {
+        const output = document.getElementById('scanner-results');
+        output.textContent = 'Scanning...';
+        try {
+            const packageData = JSON.parse(document.getElementById('scanner-deps').value);
+            const dependencies = { ...packageData.dependencies, ...packageData.devDependencies };
+            const response = await fetch(`${WORKER_URL}/scan-dependencies`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dependencies })
+            });
+            const results = await response.json();
+            if (results.error) throw new Error(results.error);
+            const vulnerabilities = results.filter(r => r.vulnerabilities.length > 0);
+            output.textContent = vulnerabilities.length > 0 ? JSON.stringify(vulnerabilities, null, 2) : 'No known vulnerabilities found. ✅';
+        } catch (error) {
+            output.textContent = `Error: ${error.message}`;
+        }
+    }));
+
+    import { init, parse } from 'https://unpkg.com/es-module-lexer@1.1.0/dist/lexer.js';
+    document.getElementById('graph-analyze-btn').addEventListener('click', async () => {
+        await init;
+        const code = document.getElementById('graph-code').value;
+        const [imports] = parse(code);
+        const nodes = new Set(['index.js']);
+        const edges = imports.filter(imp => imp.n).map(imp => { nodes.add(imp.n); return { from: 'index.js', to: imp.n }; });
+
+        const graphData = {
+            nodes: Array.from(nodes).map(node => ({ 
+                id: node, label: node,
+                color: { background: node.startsWith('.') ? '#a3e635' : '#fde047', border: '#1f2937' },
+                font: { color: '#1f2937', size: 14 }, shape: 'box', borderWidth: 2,
+            })),
+            edges: edges
+        };
+        const options = {
+            physics: { stabilization: false, solver: 'barnesHut', barnesHut: { gravitationalConstant: -4000 } },
+            layout: { hierarchical: false },
+            edges: { arrows: 'to', color: { color: '#6b7280', highlight: '#1f2937' }, smooth: true },
+            nodes: { shapeProperties: { borderRadius: 4 } }
+        };
+        new vis.Network(document.getElementById('graph-container'), graphData, options);
+    });
+</script>
+
+</body>
+</html>

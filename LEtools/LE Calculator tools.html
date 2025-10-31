@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LE Calculator  The Ultimate Crypto Toolkit</title>
+    <style>
+        :root {
+            --bg-color: #fffbeb; --card-bg: #ffffff; --text-color: #3d405b; --heading-color: #2c3e50;
+            --border-color: #e0e0e0; --primary-color: #f4d06f; --primary-accent: #f2c14e;
+            --primary-text: #3d405b; --shadow-color: rgba(90, 90, 90, 0.1);
+            --success-color: #60c5a2; --danger-color: #e57373;
+        }
+        body.dark-theme {
+            --bg-color: #1a1a1d; --card-bg: #25282c; --text-color: #e0e0e0; --heading-color: #ffffff;
+            --border-color: #495057; --primary-color: #f7b733; --primary-accent: #f4d06f;
+            --primary-text: #212529; --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Poppins', sans-serif; background-color: var(--bg-color); 
+            color: var(--text-color); margin: 0; padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; max-width: 1800px; margin: 0 auto 50px auto; }
+        .header h1 { font-size: 2.2rem; color: var(--heading-color); margin: 0; font-weight: 700; }
+        .theme-switcher { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 8px; border-radius: 50px; }
+        .theme-switcher .icon { width: 26px; height: 26px; fill: var(--primary-color); transition: transform 0.4s ease; }
+        .theme-switcher .icon#moon-icon { display: none; }
+        body.dark-theme .theme-switcher .icon#moon-icon { display: block; }
+        body.dark-theme .theme-switcher .icon#lemon-icon { display: none; }
+        .widgets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 30px; max-width: 1800px; margin: auto; }
+        .widget-card { background: var(--card-bg); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px var(--shadow-color); display: flex; flex-direction: column; border-top: 5px solid var(--primary-color); animation: fadeIn 0.6s ease-out; transition: transform 0.3s, box-shadow 0.3s; }
+        .widget-card:hover { transform: translateY(-10px); box-shadow: 0 15px 40px var(--shadow-color); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+        .widget-card h2 { margin-top: 0; font-size: 1.6rem; color: var(--heading-color); margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
+        .widget-card h2 .icon { width: 32px; height: 32px; fill: var(--primary-accent); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem;}
+        input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-color); border-radius: 10px; font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        input:focus, select:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 20%, transparent); }
+        button { width: 100%; padding: 15px; background: linear-gradient(45deg, var(--primary-color), var(--primary-accent)); color: var(--primary-text); border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; margin-top: 10px; }
+        button:hover { transform: translateY(-3px); box-shadow: 0 4px 15px color-mix(in srgb, var(--primary-color) 40%, transparent); }
+        button:active { transform: translateY(0); }
+        .results { margin-top: auto; padding: 20px; background: var(--bg-color); border-radius: 10px; line-height: 2.2; font-size: 1.05rem; }
+        .results p { margin: 12px 0; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .results p:last-child { border-bottom: none; }
+        .results .placeholder { text-align: center; color: var(--text-color); opacity: 0.6; border: none; align-items: center; justify-content: center; min-height: 50px; }
+        .results span, .results .result-value { font-weight: 700; }
+        .success { color: var(--success-color) !important; }
+        .danger { color: var(--danger-color) !important; }
+        .highlight { color: var(--primary-color) !important; font-size: 1.5rem; }
+        #transaction-form { display: flex; gap: 10px; align-items: flex-end; }
+        #transaction-list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; background: var(--bg-color); border-radius: 10px; margin-top: 15px; }
+        #transaction-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+        #transaction-list li:last-child { border-bottom: none; }
+        #transaction-list li.buy { border-left: 5px solid var(--success-color); }
+        #transaction-list li.sell { border-left: 5px solid var(--danger-color); }
+        .delete-btn { background: transparent; border: none; color: var(--danger-color); font-size: 1.5rem; font-weight: bold; cursor: pointer; padding: 0 5px; transition: transform 0.2s; }
+        .delete-btn:hover { transform: scale(1.2); }
+        .radio-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .radio-group label { display: flex; align-items: center; justify-content: center; flex: 1; padding: 12px; border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .radio-group input { display: none; }
+        .radio-group input:checked + label { border-color: var(--primary-color); background-color: color-mix(in srgb, var(--primary-color) 15%, transparent); font-weight: bold; }
+        footer { text-align: center; margin-top: 50px; opacity: 0.7; font-size: 0.9rem; }
+        @media (max-width: 900px) { .widgets-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) {
+            .header { flex-direction: column; gap: 20px; text-align: center; } .header h1 { font-size: 1.8rem; }
+            #transaction-form { flex-wrap: wrap; }
+            #transaction-form input, #transaction-form select { flex-basis: 48%; } #transaction-form button { flex-basis: 100%; }
+            body { padding: 15px; } .widget-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>LE Calculator</h1>
+        <div class="theme-switcher" id="theme-switcher">
+            <svg class="icon" id="lemon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.3,1.3c3.4,0.4,6.4,2.2,8.4,5c2.2,3.1,3,6.8,2,10.3c-0.3,1.1-0.8,2.2-1.3,3.2c-0.1,0.2-0.2,0.3-0.4,0.3 c-0.1,0-0.2-0.1-0.3-0.2c-1.3-1.6-2.8-3-4.5-4.2c-1.5-1-3.2-1.8-5-2.2C7.3,13,3.8,11.5,1.7,8.4c-1-1.5-1.5-3.2-1.4-5 c0.1-2.4,1.8-4.4,4.2-4.9c1.6-0.3,3.2-0.1,4.8,0.4C10.2,0,11.2,0.6,12.3,1.3z M11.5,4C9,4.4,6.8,5.8,5.5,8c-1,1.7-1.3,3.6-0.8,5.5 c0.7,2.5,2.9,4.3,5.5,4.9c2.9,0.7,5.9-0.4,7.6-2.7c0.8-1.1,1.3-2.3,1.5-3.6c0.5-2.7-0.1-5.6-1.8-7.9c-1.5-2-3.8-3.2-6.3-3.6 C11.3,4,11.4,4,11.5,4z"/></svg>
+            <svg class="icon" id="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11.91 1.258a1 1 0 0 1 1.306 1.306 8.5 8.5 0 1 0 9.247 9.247 1 1 0 1 1 1.306 1.306C14.771 22.84 2.84 14.771 1.258 3.864a1 1 0 0 1 1.306-1.306A10.435 10.435 0 0 1 11.91 1.258Z"/></svg>
+        </div>
+    </header>
+
+    <main class="widgets-grid">
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.293 8.293 18 7v4.414l-2.707-2.707-5.586 5.586-2-2-4 4L5.121 20H18v-4.414l-2.707-2.707-3.586 3.586-2-2-1.707 1.707L12.586 11l2.707 2.707L18 11.121V13l1.293-1.293a1 1 0 0 0 0-1.414Z"/><path d="M4 3h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg>Portfolio Calculator</h2><div class="form-group"><label for="coin-search">Search Coin</label><input type="text" id="coin-search" onkeyup="filterCoins()" placeholder="e.g. Bitcoin"><select id="coin-select" style="margin-top: 5px;"><option value="">Loading coins...</option></select></div><div class="form-group"><label>Add New Transaction:</label><div id="transaction-form"><input type="number" id="tx-quantity" placeholder="Quantity"><input type="number" id="tx-price" placeholder="Price per unit"><select id="tx-type"><option value="buy">Buy</option><option value="sell">Sell</option></select><button onclick="addTransaction()" style="width: auto; padding: 14px 20px; white-space: nowrap;">+</button></div></div><ul id="transaction-list"></ul><div class="form-group"><label for="current-price">Current Market Price</label><input type="number" id="current-price" placeholder="For unrealized P/L calculation"></div><button onclick="calculatePortfolio()">Analyze Portfolio</button><div class="results" id="portfolio-results"><p class="placeholder">Your portfolio analysis will appear here.</p></div></div>
+        
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12.16,3.48a1,1,0,0,1,1.68,0l9,15a1,1,0,0,1-.84,1.52H2.01a1,1,0,0,1-.84-1.52ZM12,6.91,5.18,18h13.63ZM11,11a1,1,0,1,1,2,0,1,1,0,0,1-2,0Zm0,3a1,1,0,1,0,2,0,1,1,0,0,0-2,0Z" clip-rule="evenodd"/></svg>Liquidation Price</h2><div class="radio-group"><input type="radio" name="trade-type" id="type-long" value="long" checked><label for="type-long">Long</label><input type="radio" name="trade-type" id="type-short" value="short"><label for="type-short">Short</label></div><div class="form-group"><label for="lp-entry">Entry Price</label><input type="number" id="lp-entry" placeholder="Your entry price"></div><div class="form-group"><label for="lp-leverage">Leverage</label><input type="number" id="lp-leverage" placeholder="e.g., 10 (for 10x)"></div><div class="form-group"><label for="lp-margin">Collateral / Margin ($)</label><input type="number" id="lp-margin" placeholder="The amount you risked"></div><button onclick="calculateLiquidation()">Calculate Liquidation Price</button><div class="results" id="lp-results"><p class="placeholder">Your estimated liquidation price will be shown here.</p></div></div>
+
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M3,5A2,2,0,0,1,5,3H19a2,2,0,0,1,2,2v6a2,2,0,0,1-2,2H5a2,2,0,0,1-2-2ZM5,5H19v6H5Zm3,10a3,3,0,1,0-3-3A3,3,0,0,0,8,15Zm11.5-2a.5.5,0,0,0,0,1h-4a.5.5,0,0,0,0-1Z" clip-rule="evenodd"/></svg>Position Size</h2><div class="form-group"><label for="ps-account">Account Size ($)</label><input type="number" id="ps-account" placeholder="Your total portfolio value"></div><div class="form-group"><label for="ps-risk">Risk per Trade (%)</label><input type="number" id="ps-risk" placeholder="e.g., 1 (for 1%)" value="1"></div><div class="form-group"><label for="ps-entry">Entry Price</label><input type="number" id="ps-entry" placeholder="Your desired entry price"></div><div class="form-group"><label for="ps-sl">Stop-Loss Price</label><input type="number" id="ps-sl" placeholder="Your stop-loss price"></div><button onclick="calculatePositionSize()">Calculate Position Size</button><div class="results" id="ps-results"><p class="placeholder">Optimal position size for your risk level.</p></div></div>
+        
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12,8a4,4,0,1,1-8,0,4,4,0,0,1,8,0M8,6a2,2,0,1,0,0,4,2,2,0,0,0,0-4Zm14,2a1,1,0,0,1-1,1H13a1,1,0,1,1,0-2h8a1,1,0,0,1,1,1Zm-9,6a1,1,0,1,0-2,0v8a1,1,0,1,0,2,0Zm4-7a1,1,0,0,1,1,1v8a1,1,0,1,1-2,0V9a1,1,0,0,1,1-1Z" clip-rule="evenodd"/></svg>Pivot Points</h2><div class="form-group"><label for="pp-high">Previous High Price</label><input type="number" id="pp-high" placeholder="e.g., 65000"></div><div class="form-group"><label for="pp-low">Previous Low Price</label><input type="number" id="pp-low" placeholder="e.g., 62000"></div><div class="form-group"><label for="pp-close">Previous Close Price</label><input type="number" id="pp-close" placeholder="e.g., 64000"></div><button onclick="calculatePivotPoints()">Calculate Pivots</button><div class="results" id="pp-results"><p class="placeholder">Key support & resistance levels for the current period.</p></div></div>
+
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m21.64,13.2a.8.8,0,0,1-.8.8.8.8,0,0,1-.8-.8V6.8a.8.8,0,0,1,1.6,0Zm-4,2.4a.8.8,0,0,1-.8.8.8.8,0,0,1-.8-.8V4.4a.8.8,0,0,1,1.6,0Zm-4,1.6a.8.8,0,0,1-.8.8.8.8,0,0,1-.8-.8V2a.8.8,0,0,1,1.6,0ZM8.06,12a.8.8,0,0,1-.8.8.8.8,0,0,1-.8-.8V8.4a.8.8,0,0,1,1.6,0Zm-4-1.6a.8.8,0,0,1-.8.8.8.8,0,0,1-.8-.8V6a.8.8,0,0,1,1.6,0Z"/></svg>DCA Simulator</h2><div class="form-group"><label for="dca-amount">Investment per Period ($)</label><input type="number" id="dca-amount" placeholder="e.g. 100"></div><div class="form-group"><label for="dca-duration">Investment Duration (Years)</label><input type="number" id="dca-duration" placeholder="e.g. 5"></div><div class="form-group"><label for="dca-growth">Estimated Annual Growth (%)</label><input type="number" id="dca-growth" placeholder="e.g. 25"></div><button onclick="calculateDCA()">Simulate DCA</button><div class="results" id="dca-results"><p class="placeholder">Simulate your dollar-cost averaging strategy.</p></div></div>
+
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.883 18.883a1 1 0 0 1-1.414 0l-3.352-3.352a5.503 5.503 0 0 1-8.001-4.99 5.485 5.485 0 0 1 4.99-4.225h.001a5.485 5.485 0 0 1 4.99 6.812l3.351 3.351a1 1 0 0 1 0 1.414ZM11 13a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/><path d="M5.117 18.883a1 1 0 0 1 1.414 0l3.44-3.44a1 1 0 1 1 1.414 1.414l-3.44 3.44a1 1 0 0 1-1.414 0Z"/></svg>Staking Rewards</h2><div class="form-group"><label for="stake-amount">Principal Amount</label><input type="number" id="stake-amount" placeholder="e.g. 1000"></div><div class="form-group"><label for="stake-apy">Annual Percentage Yield (APY %)</label><input type="number" id="stake-apy" placeholder="e.g. 5.5"></div><div class="form-group"><label for="stake-days">Staking Duration (days)</label><input type="number" id="stake-days" placeholder="e.g. 365"></div><button onclick="calculateStaking()">Calculate Rewards</button><div class="results" id="staking-results"><p class="placeholder">Your estimated staking rewards will be shown here.</p></div></div>
+
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 11.5a1 1 0 0 1-1 1h-8.9a1 1 0 1 0 0 2h7.4a1 1 0 0 1 0 2h-7.4a3 3 0 1 1 0-6H20a1 1 0 0 1 1 1.5Zm-8.5-5a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h7.4a1 1 0 0 0 1.1-1.5h-.1ZM4.4 18h7.4a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2h1.4Z"/></svg>Impermanent Loss</h2><div class="form-group"><label for="il-initial">Initial Asset Price</pre>
+                <input type="number" id="il-initial" placeholder="Price when you entered the pool"></div><div class="form-group"><label for="il-current">Current Asset Price</label><input type="number" id="il-current" placeholder="Current market price"></div><button onclick="calculateIL()">Calculate IL</button><div class="results" id="il-results"><p class="placeholder">Estimated loss compared to just HODLing.</p></div></div>
+        
+        
+        <div class="widget-card"><h2><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.5 21a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5.5Zm3.25-2h6.5a1 1 0 1 0 0-2h-6.5a1 1 0 1 0 0 2Zm-2-4a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm2.5-1.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm3.5-2.5a1 1 0 1 0-2 0 1 1 0 0 0 2 0Zm-2-2.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>Simple ROI</h2><div class="form-group"><label for="roi-initial">Initial Investment ($)</label><input type="number" id="roi-initial" placeholder="e.g. 5000"></div><div class="form-group"><label for="roi-final">Final Value of Investment ($)</label><input type="number" id="roi-final" placeholder="e.g. 7500"></div><button onclick="calculateROI()">Calculate ROI</button><div class="results" id="roi-results"><p class="placeholder">Your Return On Investment will be calculated here.</p></div></div>
+    </main>
+    
+    <footer><p>All calculations are for estimation purposes only. LE Calculator is not a financial advisor.</p></footer>
+
+<script>
+    const themeSwitcher = document.getElementById('theme-switcher');
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') document.body.classList.add('dark-theme');
+    });
+
+    themeSwitcher.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+    });
+
+    const COIN_LIST_WORKER_URL = 'https://rough-bush-f090.lemonzm7.workers.dev/'; 
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const select = document.getElementById('coin-select');
+        try {
+            const response = await fetch(COIN_LIST_WORKER_URL);
+            if (!response.ok) throw new Error('Network response');
+            const coins = await response.json();
+            
+            select.innerHTML = '<option value="">-- Select a coin --</option>';
+            coins.sort((a, b) => a.name.localeCompare(b.name)).forEach(coin => {
+                const option = document.createElement('option');
+                option.value = coin.id;
+                option.innerText = `${coin.name} (${coin.symbol.toUpperCase()})`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            select.innerHTML = '<option value="">Error loading list</option>';
+            select.disabled = true;
+        }
+    });
+    
+    function filterCoins() {
+        const filter = document.getElementById('coin-search').value.toLowerCase();
+        const options = document.querySelectorAll('#coin-select option');
+        options.forEach(option => {
+            const text = option.innerText.toLowerCase();
+            option.style.display = text.includes(filter) ? '' : 'none';
+        });
+    }
+
+    let transactions = [];
+    function addTransaction() {
+        const quantity = parseFloat(document.getElementById('tx-quantity').value);
+        const price = parseFloat(document.getElementById('tx-price').value);
+        const type = document.getElementById('tx-type').value;
+        if (isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) return;
+        transactions.push({ type, quantity, price });
+        renderTransactions();
+        document.getElementById('tx-quantity').value = '';
+        document.getElementById('tx-price').value = '';
+    }
+    function deleteTransaction(index) {
+        transactions.splice(index, 1);
+        renderTransactions();
+        calculatePortfolio();
+    }
+    function renderTransactions() {
+        const list = document.getElementById('transaction-list');
+        list.innerHTML = '';
+        if (transactions.length === 0) return;
+        transactions.forEach((tx, index) => {
+            const li = document.createElement('li');
+            const textNode = document.createElement('span');
+            const deleteBtn = document.createElement('button');
+            li.className = tx.type;
+            textNode.textContent = `${tx.type === 'buy' ? 'Bought' : 'Sold'}: ${tx.quantity} units @ $${tx.price.toLocaleString('en-US')}`;
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.onclick = () => deleteTransaction(index);
+            li.appendChild(textNode);
+            li.appendChild(deleteBtn);
+            list.appendChild(li);
+        });
+    }
+    function calculatePortfolio() {
+        const resultsDiv = document.getElementById('portfolio-results');
+        if (transactions.length === 0) {
+            resultsDiv.innerHTML = "<p class='placeholder'>Add transactions to begin analysis.</p>"; return;
+        }
+        let totalQuantityBought = 0, totalCost = 0, totalQuantitySold = 0, totalSaleProceeds = 0;
+        transactions.forEach(tx => {
+            if (tx.type === 'buy') {
+                totalQuantityBought += tx.quantity;
+                totalCost += tx.quantity * tx.price;
+            } else {
+                totalQuantitySold += tx.quantity;
+                totalSaleProceeds += tx.quantity * tx.price;
+            }
+        });
+        if (totalQuantitySold > totalQuantityBought) {
+            resultsDiv.innerHTML = "<p class='danger'>Error: Sale quantity exceeds buy quantity!</p>"; return;
+        }
+        const averageBuyPrice = totalQuantityBought > 0 ? totalCost / totalQuantityBought : 0;
+        const realizedPL = totalSaleProceeds - (totalQuantitySold * averageBuyPrice);
+        const remainingQuantity = totalQuantityBought - totalQuantitySold;
+        const remainingCostBasis = remainingQuantity * averageBuyPrice;
+        let resultHTML = `<p>Average Buy Price: <span>$${averageBuyPrice.toLocaleString('en-US',{minimumFractionDigits: 2, maximumFractionDigits: 4})}</span></p>`;
+        resultHTML += `<p>Realized P/L: <span class="${realizedPL >= 0 ? 'success' : 'danger'}">$${realizedPL.toLocaleString('en-US',{minimumFractionDigits:2})}</span></p>`;
+        resultHTML += `<p>Remaining Holdings: <span>${remainingQuantity.toLocaleString('en-US',{maximumFractionDigits:6})} units</span></p>`;
+        const currentPrice = parseFloat(document.getElementById('current-price').value);
+        if (!isNaN(currentPrice) && currentPrice > 0 && remainingQuantity > 0) {
+            const currentValue = remainingQuantity * currentPrice;
+            const unrealizedPL = currentValue - remainingCostBasis;
+            resultHTML += `<p>Current Value: <span>$${currentValue.toLocaleString('en-US',{minimumFractionDigits:2})}</span></p>`;
+            resultHTML += `<p><b>Unrealized P/L:</b> <span class="${unrealizedPL >= 0 ? 'success' : 'danger'}">$${unrealizedPL.toLocaleString('en-US',{minimumFractionDigits:2})}</span></p>`;
+        }
+        resultsDiv.innerHTML = resultHTML;
+    }
+    function calculateStaking() {
+        const amount = parseFloat(document.getElementById('stake-amount').value), apy = parseFloat(document.getElementById('stake-apy').value), days = parseInt(document.getElementById('stake-days').value);
+        const resultsDiv = document.getElementById('staking-results');
+        if (isNaN(amount) || isNaN(apy) || isNaN(days) || amount <= 0 || apy <= 0 || days <= 0) {
+            resultsDiv.innerHTML = "<p class='danger'>Please enter valid values in all fields.</p>"; return;
+        }
+        const totalReward = amount * (apy / 100 / 365) * days;
+        resultsDiv.innerHTML = `<p>Daily Reward: <span>~${(totalReward / days).toLocaleString('en-US', {maximumFractionDigits: 6})}</span></p><p>Total Reward: <span class="success">${totalReward.toLocaleString('en-US', {maximumFractionDigits: 6})}</span></p><p>Final Balance: <span>${(amount + totalReward).toLocaleString('en-US', {maximumFractionDigits: 6})}</span></p>`;
+    }
+    function calculateIL() {
+        const initialPrice = parseFloat(document.getElementById('il-initial').value), currentPrice = parseFloat(document.getElementById('il-current').value);
+        const resultsDiv = document.getElementById('il-results');
+        if (isNaN(initialPrice) || isNaN(currentPrice) || initialPrice <= 0 || currentPrice <= 0) {
+            resultsDiv.innerHTML = "<p class='danger'>Please enter valid initial and current prices.</p>"; return;
+        }
+        const ilPercentage = Math.abs(((2 * Math.sqrt(currentPrice / initialPrice)) / (1 + (currentPrice / initialPrice))) - 1) * 100;
+        resultsDiv.innerHTML = `<p>vs. HODL, your pool is worth:</p><p><span class="danger">-${ilPercentage.toFixed(2)}%</span></p>`;
+    }
+    function calculateROI() {
+        const initial = parseFloat(document.getElementById('roi-initial').value), final = parseFloat(document.getElementById('roi-final').value);
+        const resultsDiv = document.getElementById('roi-results');
+        if (isNaN(initial) || isNaN(final) || initial <= 0) {
+            resultsDiv.innerHTML = "<p class='danger'>Please enter a valid initial and final value.</p>"; return;
+        }
+        const pl = final - initial;
+        const roi = (pl / initial) * 100;
+        resultsDiv.innerHTML = `<p>Profit / Loss: <span class="${pl >= 0 ? 'success' : 'danger'}">$${pl.toLocaleString('en-US',{minimumFractionDigits:2})}</span></p><p><b>Return on Investment:</b> <span class="${pl >= 0 ? 'success' : 'danger'}">${roi.toFixed(2)}%</span></p>`;
+    }
+    function calculateLiquidation(){
+        const entryPrice = parseFloat(document.getElementById('lp-entry').value), leverage = parseFloat(document.getElementById('lp-leverage').value), collateral = parseFloat(document.getElementById('lp-margin').value);
+        const tradeType = document.querySelector('input[name="trade-type"]:checked').value;
+        const resultsDiv = document.getElementById('lp-results');
+        if(isNaN(entryPrice) || isNaN(leverage) || isNaN(collateral) || leverage <= 1 || collateral <= 0){
+             resultsDiv.innerHTML = "<p class='danger'>Please enter valid entry price, leverage (>1), and collateral.</p>"; return;
+        }
+        let liquidationPrice;
+        if(tradeType === 'long'){
+            liquidationPrice = entryPrice * (1 - (1 / leverage) + (0.01)); // Added 1% for maintenance margin
+        } else {
+            liquidationPrice = entryPrice * (1 + (1 / leverage) - (0.01)); // Added 1% for maintenance margin
+        }
+        resultsDiv.innerHTML = `<p>Est. Liquidation Price: <span class="result-value danger">$${liquidationPrice.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2})}</span></p>`;
+    }
+    function calculatePositionSize(){
+        const accountSize = parseFloat(document.getElementById('ps-account').value), riskPercent = parseFloat(document.getElementById('ps-risk').value), entryPrice = parseFloat(document.getElementById('ps-entry').value), stopLossPrice = parseFloat(document.getElementById('ps-sl').value);
+        const resultsDiv = document.getElementById('ps-results');
+        if(isNaN(accountSize) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice) || accountSize <= 0 || riskPercent <= 0 || entryPrice <= 0 || stopLossPrice <= 0){
+             resultsDiv.innerHTML = "<p class='danger'>Please fill in all the required fields.</p>"; return;
+        }
+        if(entryPrice === stopLossPrice) {
+            resultsDiv.innerHTML = "<p class='danger'>Entry and Stop-Loss can't be the same.</p>"; return;
+        }
+        const amountToRisk = accountSize * (riskPercent / 100);
+        const priceDiff = Math.abs(entryPrice - stopLossPrice);
+        const positionSizeUnits = amountToRisk / priceDiff;
+        resultsDiv.innerHTML = `<p>Amount to Risk: <span class="danger">$${amountToRisk.toLocaleString("en-US",{minimumFractionDigits:2})}</span></p><p><b>Position Size (Units):</b> <span class="result-value highlight">${positionSizeUnits.toLocaleString("en-US",{maximumFractionDigits:6})}</span></p><p><b>Position Size ($):</b> <span class="result-value highlight">$${(entryPrice * positionSizeUnits).toLocaleString("en-US",{minimumFractionDigits:2})}</span></p>`;
+    }
+    function calculatePivotPoints(){
+        const high = parseFloat(document.getElementById('pp-high').value), low = parseFloat(document.getElementById('pp-low').value), close = parseFloat(document.getElementById('pp-close').value);
+        const resultsDiv = document.getElementById('pp-results');
+        if(isNaN(high) || isNaN(low) || isNaN(close) || high <= low){
+            resultsDiv.innerHTML = "<p class='danger'>Please enter valid High, Low, and Close prices.</p>"; return;
+        }
+        const pivot = (high + low + close) / 3;
+        const r1 = (2 * pivot) - low, s1 = (2 * pivot) - high, r2 = pivot + (high - low), s2 = pivot - (high - low), r3 = high + 2 * (pivot - low), s3 = low - 2 * (high - pivot);
+        resultsDiv.innerHTML = `<p class="success">Resistance 3 (R3): <span>$${r3.toLocaleString("en-US")}</span></p><p class="success">Resistance 2 (R2): <span>$${r2.toLocaleString("en-US")}</span></p><p class="success">Resistance 1 (R1): <span>$${r1.toLocaleString("en-US")}</span></p><p><b>Pivot Point (P):</b> <span class="highlight">$${pivot.toLocaleString("en-US")}</span></p><p class="danger">Support 1 (S1): <span>$${s1.toLocaleString("en-US")}</span></p><p class="danger">Support 2 (S2): <span>$${s2.toLocaleString("en-US")}</span></p><p class="danger">Support 3 (S3): <span>$${s3.toLocaleString("en-US")}</span></p>`;
+    }
+    function calculateDCA(){
+        const investment = parseFloat(document.getElementById('dca-amount').value), durationYears = parseInt(document.getElementById('dca-duration').value), annualGrowth = parseFloat(document.getElementById('dca-growth').value);
+        const resultsDiv = document.getElementById('dca-results');
+        if(isNaN(investment) || isNaN(durationYears) || isNaN(annualGrowth) || investment <= 0 || durationYears <= 0 || annualGrowth < 0){
+             resultsDiv.innerHTML = "<p class='danger'>Please provide valid inputs for all fields.</p>"; return;
+        }
+        const totalMonths = durationYears * 12;
+        const monthlyGrowth = Math.pow(1 + (annualGrowth / 100), 1/12) - 1;
+        let futureValue = 0;
+        for (let i = 0; i < totalMonths; i++) {
+            futureValue = (futureValue + investment) * (1 + monthlyGrowth);
+        }
+        const totalInvested = totalMonths * investment;
+        const totalGains = futureValue - totalInvested;
+        resultsDiv.innerHTML = `<p>Total Invested: <span>$${totalInvested.toLocaleString("en-US")}</span></p><p><b>Final Portfolio Value:</b> <span class="result-value highlight">$${futureValue.toLocaleString("en-US",{minimumFractionDigits:2})}</span></p><p>Total Gains: <span class="success">$${totalGains.toLocaleString("en-US",{minimumFractionDigits:2})}</span></p>`;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>lE site check - Advanced URL Scanner</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/NDw7bQY.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      height: 100%;
+    }
+    body {
+      background: linear-gradient(135deg, #fffbe6 0%, #ffefc6 100%);
+      font-family: 'Quicksand', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.7s;
+    }
+    .lemonz-bg-anim {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: url('https://svgshare.com/i/15jF.svg') repeat;
+      opacity: 0.05;
+      animation: bg-move 20s linear infinite alternate;
+    }
+    @keyframes bg-move {
+      0% { background-position: 0 0; }
+      100% { background-position: 120px 90px; }
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.97);
+      border-radius: 22px;
+      box-shadow: 0 14px 38px 0 #f9a82530, 0 3px 12px #eee;
+      padding: 36px 25px 28px 25px;
+      width: 95%;
+      max-width: 540px;
+      text-align: center;
+      animation: pop-in 0.8s cubic-bezier(.6,-0.28,.74,.05);
+      overflow: hidden;
+    }
+    @keyframes pop-in {
+      0% { transform: scale(0.93) translateY(40px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .logo-anim {
+      margin: 0 auto 14px;
+      width: 85px; height: 85px;
+      display: flex; align-items: center; justify-content: center;
+      animation: lemon-bounce 2.5s cubic-bezier(.69,.06,.48,.94) infinite alternate;
+      filter: drop-shadow(0 8px 30px #ffe082aa);
+    }
+    .logo-anim img {
+      width: 85px; height: 85px; object-fit: contain; border-radius: 20%;
+      animation: lemon-spin 3.2s linear infinite alternate;
+    }
+    @keyframes lemon-bounce {
+      0% { transform: translateY(0) scale(1);}
+      18% { transform: translateY(-16px) scale(1.08);}
+      60% { transform: translateY(-9px) scale(1.03);}
+      100% { transform: translateY(0) scale(1);}
+    }
+    @keyframes lemon-spin {
+      0% { transform: rotate(-8deg);}
+      100% { transform: rotate(10deg);}
+    }
+    h1 {
+      color: #f9a825;
+      margin-bottom: 18px;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 12px #ffe08255, 0 1px 0 #fffbe7;
+      animation: fadeInDown 1s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes fadeInDown {
+      0% { opacity: 0; transform: translateY(-32px);}
+      100% { opacity: 1; transform: translateY(0);}
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      font-size: 17px;
+      border: 2px solid #f9a825;
+      border-radius: 10px;
+      box-sizing: border-box;
+      outline: none;
+      background: #fffbe7;
+      margin-bottom: 12px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+    }
+    input[type="text"]:focus {
+      border-color: #c17900;
+      box-shadow: 0 0 8px #ffe082aa;
+    }
+    button {
+      margin-top: 8px;
+      background: linear-gradient(90deg, #f9a825 70%, #ffd54f 100%);
+      border: none;
+      color: #3a2e00;
+      font-weight: 800;
+      padding: 15px 0;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 3px 13px #ffe08255;
+      transition: background 0.3s, color 0.3s, transform 0.16s;
+      font-family: inherit;
+      letter-spacing: .7px;
+      position: relative;
+      z-index: 1;
+    }
+    button:hover, button:focus {
+      background: linear-gradient(90deg,#c17900 60%, #ffe082 100%);
+      color: #fff;
+      transform: scale(1.04);
+      outline: none;
+    }
+    #loading {
+      display: none;
+      margin-top: 22px;
+      color: #f9a825;
+      font-weight: 700;
+      font-size: 1.12em;
+      letter-spacing: .2px;
+      animation: fadeIn 0.4s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    #results {
+      margin-top: 24px;
+      min-height: 20px;
+      animation: fadeIn 0.7s;
+    }
+    .status-line {
+      padding: 13px 14px;
+      margin: 8px 0;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 1.04em;
+      font-weight: 700;
+      letter-spacing: .08em;
+      animation: linePop 0.45s;
+      box-shadow: 0 1px 8px #ffe08219;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    @keyframes linePop {
+      from { opacity: 0; transform: translateY(20px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    .safe { background: #f2fff2; color: #2e7d32; border-left: 6px solid #6be86b;}
+    .warning { background: #fff7d4; color: #b57f00; border-left: 6px solid #ffd54f;}
+    .danger { background: #fdecea; color: #b71c1c; border-left: 6px solid #f44336;}
+    #verdict {
+      font-weight: 900;
+      font-size: 1.13em;
+      margin-top: 18px;
+      letter-spacing: .5px;
+      box-shadow: 0 3px 14px #ffd54f2b;
+      text-align: center;
+      justify-content: center;
+      display: flex;
+      align-items: center;
+      animation: verdictFadeIn 0.8s cubic-bezier(.38,.07,.39,.97);
+    }
+    @keyframes verdictFadeIn {
+      from { opacity: 0; transform: scale(0.93);}
+      to { opacity: 1; transform: scale(1);}
+    }
+    .verdict-ico {
+      font-size: 1.45em;
+      margin-right: 7px;
+      margin-left: 3px;
+      vertical-align: -2px;
+    }
+    
+    @media (max-width: 600px){
+      .container {padding: 16px 2vw 13px 2vw;}
+      .logo-anim {width:52px;height:52px;}
+      .logo-anim img {width:48px;height:48px;}
+      h1 {font-size:1.2rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="lemonz-bg-anim"></div>
+  <div class="container">
+    <div class="logo-anim">
+      <img src="https://i.imgur.com/NDw7bQY.png" alt="lE logo" />
+    </div>
+    <h1>LE Site Check</h1>
+    <input type="text" id="urlInput" placeholder="Enter URL (e.g. 0xlemonz.xyz)" value="0xlemonz.xyz" />
+    <button id="scanBtn" onclick="checkUrl()">Start Scan</button>
+    <div id="loading">Scanning... <span class="lemonz-anim-dot"></span></div>
+    <div id="results"></div>
+  </div>
+  <script>
+    
+    let dotTimer;
+    function startDotAnim() {
+      const el = document.querySelector('.lemonz-anim-dot');
+      if (!el) return;
+      let dots = ['','.','..','...'];
+      let i = 0;
+      dotTimer = setInterval(()=>{el.textContent = dots[i++%dots.length]}, 450);
+    }
+    function stopDotAnim() { clearInterval(dotTimer); }
+
+    function normalizeUrl(url) {
+      return url.startsWith("http") ? url : "https://" + url;
+    }
+
+    
+    function getVerdict(finalFilters) {
+      
+      const nonThreatFoxDangers = finalFilters.filter(
+        x => x.level === 'danger' && x.label !== 'ThreatFox'
+      ).length;
+      
+      const threatFoxDanger = finalFilters.find(
+        x => x.label === 'ThreatFox' && x.level === 'danger'
+      ) ? 0.5 : 0;
+
+      const totalDangerScore = nonThreatFoxDangers + threatFoxDanger;
+
+      if (totalDangerScore >= 3) {
+        return { text: "❗ Verdict: Suspicious", class: "danger", ico: "❗" };
+      }
+      if (nonThreatFoxDangers >= 2) {
+        return { text: "⚠️ Verdict: Slightly Suspicious", class: "warning", ico: "⚠️" };
+      }
+      
+      if (nonThreatFoxDangers === 0 && threatFoxDanger) {
+        return { text: "✅ Verdict: Safe", class: "safe", ico: "✅" };
+      }
+      
+      if (nonThreatFoxDangers === 1) {
+        return { text: "⚠️ Verdict: Slightly Suspicious", class: "warning", ico: "⚠️" };
+      }
+      
+      const yellowCount = finalFilters.filter(x => x.level === 'warning').length;
+      if (yellowCount) {
+        return { text: "⚠️ Verdict: Slightly Suspicious", class: "warning", ico: "⚠️" };
+      }
+      return { text: "✅ Verdict: Safe", class: "safe", ico: "✅" };
+    }
+
+    function createLine(label, value, level, ico) {
+      const div = document.createElement("div");
+      div.className = `status-line ${level}`;
+      div.innerHTML = `<span class="verdict-ico">${ico || ''}</span> <span>${label}:</span> <span>${value}</span>`;
+      return div;
+    }
+
+    function getFilterResults(data) {
+      let out = [];
+      
+      if (data.google_safe_browsing) {
+        if (data.google_safe_browsing.includes("Safe")) {
+          out.push({ label: "Google Safe Browsing", value: data.google_safe_browsing, level: "safe", ico: "✅" });
+        } else {
+          out.push({ label: "Google Safe Browsing", value: data.google_safe_browsing, level: "danger", ico: "🚨" });
+        }
+      } else {
+        out.push({ label: "Google Safe Browsing", value: "No data", level: "warning", ico: "⚠️" });
+      }
+      
+      if (data.abuse_ip_db) {
+        const conf = parseInt(data.abuse_ip_db.match(/Confidence (\d+)%/)?.[1] || 0);
+        if (conf === 0) {
+          out.push({ label: "AbuseIPDB", value: data.abuse_ip_db, level: "safe", ico: "✅" });
+        } else if (conf > 50) {
+          out.push({ label: "AbuseIPDB", value: data.abuse_ip_db, level: "danger", ico: "🚨" });
+        } else {
+          out.push({ label: "AbuseIPDB", value: data.abuse_ip_db, level: "warning", ico: "⚠️" });
+        }
+      } else {
+        out.push({ label: "AbuseIPDB", value: "No data", level: "warning", ico: "⚠️" });
+      }
+      
+      if (data.threat_fox) {
+        if (data.threat_fox.includes("Threat detected")) {
+          out.push({ label: "ThreatFox", value: data.threat_fox, level: "danger", ico: "🚨" });
+        } else {
+          out.push({ label: "ThreatFox", value: data.threat_fox, level: "safe", ico: "✅" });
+        }
+      } else {
+        out.push({ label: "ThreatFox", value: "No data", level: "warning", ico: "⚠️" });
+      }
+      
+      if (data.urlscan_io) {
+        if (data.urlscan_io.includes("⚠️")) {
+          out.push({ label: "URLScan.io", value: data.urlscan_io, level: "warning", ico: "⚠️" });
+        } else {
+          out.push({ label: "URLScan.io", value: data.urlscan_io, level: "safe", ico: "✅" });
+        }
+      } else {
+        out.push({ label: "URLScan.io", value: "No data", level: "warning", ico: "⚠️" });
+      }
+      
+      if (data.alienvault_otx) {
+        if (data.alienvault_otx.toLowerCase().includes("malicious")) {
+          out.push({ label: "AlienVault OTX", value: data.alienvault_otx, level: "danger", ico: "🚨" });
+        } else if (data.alienvault_otx.toLowerCase().includes("suspicious")) {
+          out.push({ label: "AlienVault OTX", value: data.alienvault_otx, level: "warning", ico: "⚠️" });
+        } else {
+          out.push({ label: "AlienVault OTX", value: data.alienvault_otx, level: "safe", ico: "✅" });
+        }
+      } else {
+        out.push({ label: "AlienVault OTX", value: "No data", level: "warning", ico: "⚠️" });
+      }
+      return out;
+    }
+
+    async function checkUrl() {
+      const url = document.getElementById("urlInput").value.trim();
+      const results = document.getElementById("results");
+      const loading = document.getElementById("loading");
+      if (!url) return alert("Please enter a URL");
+      results.innerHTML = "";
+      loading.style.display = "block";
+      startDotAnim();
+
+      const fullUrl = normalizeUrl(url);
+      const apiUrl = `https://small-grass-5d81.lemonzm7.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
+
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        loading.style.display = "none";
+        stopDotAnim();
+
+        
+        results.appendChild(createLine("URL", data.url || url, "safe", "🌐"));
+        results.appendChild(createLine("Resolved IP", data.ip || "Unknown", "safe", "🔎"));
+
+        
+        const filters = getFilterResults(data);
+        filters.forEach(f => results.appendChild(createLine(f.label, f.value, f.level, f.ico)));
+
+        
+        const verdict = getVerdict(filters);
+        const verdictDiv = document.createElement("div");
+        verdictDiv.id = "verdict";
+        verdictDiv.className = `status-line ${verdict.class}`;
+        verdictDiv.innerHTML = `<span class="verdict-ico">${verdict.ico}</span> ${verdict.text}`;
+        results.appendChild(verdictDiv);
+      } catch (err) {
+        loading.style.display = "none";
+        stopDotAnim();
+        results.innerHTML = `<div class="status-line danger">❌ Error: ${err.message}</div>`;
+      }
+    }
+
+    
+    document.getElementById('scanBtn').addEventListener('mousedown', e => {
+      e.target.style.transform = "scale(.96)";
+      setTimeout(()=>e.target.style.transform = "scale(1)", 130);
+    });
+    document.getElementById('urlInput').addEventListener('focus', e => {
+      e.target.style.boxShadow = "0 0 13px #ffe082aa";
+    });
+    document.getElementById('urlInput').addEventListener('blur', e => {
+      e.target.style.boxShadow = "";
+    });
+
+    
+    document.getElementById('urlInput').addEventListener("keyup", function(e) {
+      if (e.key === "Enter") checkUrl();
+    });
+  </script>
+</body>
+</html>

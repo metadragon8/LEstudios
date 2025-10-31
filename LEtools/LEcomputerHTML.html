@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LE HTML Server Preview - LECOMPUTER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: Tahoma, Arial; background: #fffde7; color:#222; padding:40px; margin:0;}
+    h1 { color: #ffb300; }
+    .desc { color:#666; margin-bottom:18px; }
+    textarea { width:100%; min-height:180px; border:2px solid #ffe066; border-radius:10px; font-size:1em; padding:10px; resize:vertical; box-sizing:border-box;}
+    button { background: #ffb300; color: #222; border: none; padding: 12px 26px; border-radius: 8px; font-size: 1em; margin-top: 10px; cursor: pointer; font-weight: bold;}
+    .preview-box { margin: 32px 0; border:2px solid #ffe066; border-radius:12px; background:#fff; padding:18px; position:relative;}
+    .expand-btn { position:absolute; top:16px; right:18px; background:#ffe066; border:none; color:#222; border-radius:7px; font-size:1.3em; padding:6px 16px; cursor:pointer; box-shadow:0 1px 8px #ffe06644;}
+    .expand-btn:active { background:#ffb300; }
+    iframe { width:100%; min-height:260px; border:none; background:#fff; border-radius:10px; box-shadow: 0 2px 12px #ffe06622;}
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.33); z-index:99;}
+    .modal-bg.active { display:block; }
+    .modal-iframe-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:18px; box-shadow:0 8px 36px #0003; z-index:100; padding:24px; max-width:90vw; max-height:90vh; display:flex; flex-direction:column; align-items:center;}
+    .modal-iframe-box iframe { width:80vw; height:70vh; border-radius:11px; box-shadow:0 2px 18px #ffe06655;}
+    .close-btn { background:#ffb300; color:#222; border:none; border-radius:8px; font-size:1.5em; font-weight:bold; padding:0 20px; margin-top:14px; cursor:pointer;}
+    @media (max-width:900px) {
+      body { padding:14px; }
+      h1 { font-size:1.6em; padding-top:8px;}
+      textarea { min-height:110px; font-size:0.96em;}
+      .preview-box { padding:10px 2px; margin:18px 0;}
+      .expand-btn { font-size:1.1em; padding:4px 12px; top:9px; right:10px;}
+      iframe { min-height:130px; }
+      .modal-iframe-box iframe { width:98vw; height:60vh;}
+      .modal-iframe-box { padding:8px; max-width:99vw; max-height:95vh; border-radius:14px;}
+    }
+  </style>
+</head>
+<body>
+  <h1>LE HTML Server Preview</h1>
+  <div class="desc">Paste your HTML code and see how your site renders from the server-side (no client JS).</div>
+  <form id="htmlForm">
+    <textarea name="html" id="htmlInput" placeholder="Paste your HTML code here..."></textarea>
+    <br>
+    <button type="submit">Preview Server-side HTML</button>
+  </form>
+  <div class="preview-box" id="previewBox" style="display:none;">
+    <button class="expand-btn" id="expandBtn" title="Expand Preview">🔍 Expand Preview</button>
+    <iframe id="previewIframe"></iframe>
+  </div>
+  <div class="modal-bg" id="modalBg">
+    <div class="modal-iframe-box">
+      <iframe id="modalPreview"></iframe>
+      <button class="close-btn" id="closeModalBtn">❌ Close</button>
+    </div>
+  </div>
+  <script>
+    const workerUrl = "https://misty-sun-1ff6.lemonzm7.workers.dev/";
+    document.getElementById('htmlForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const html = document.getElementById('htmlInput').value;
+      const params = new URLSearchParams();
+      params.append('html', html);
+      const res = await fetch(workerUrl, {
+        method: "POST",
+        body: params,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      });
+      const resultHtml = await res.text();
+      document.getElementById('previewBox').style.display = 'block';
+      document.getElementById('previewIframe').srcdoc = resultHtml;
+    });
+
+    document.getElementById('expandBtn').onclick = function() {
+      const srcdoc = document.getElementById('previewIframe').srcdoc;
+      document.getElementById('modalPreview').srcdoc = srcdoc;
+      document.getElementById('modalBg').classList.add('active');
+    };
+    document.getElementById('closeModalBtn').onclick = function() {
+      document.getElementById('modalBg').classList.remove('active');
+      document.getElementById('modalPreview').srcdoc = '';
+    };
+  </script>
+</body>
+</html>

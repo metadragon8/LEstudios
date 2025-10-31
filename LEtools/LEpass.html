@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>lemonzpass - Password Generator & Checker</title>
+<link rel="icon" type="image/png" href="https://i.imgur.com/NDw7bQY.png" />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Quicksand', 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #fffbe6 0%, #fff9db 100%);
+    color: #444;
+    margin: 0;
+    padding: 20px;
+    max-width: 740px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: background 0.7s;
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .logo-anim {
+    width: 100px; height: 100px;
+    margin: 25px auto 0;
+    display: flex; align-items: center; justify-content: center;
+    animation: logo-bounce 2.1s cubic-bezier(.69,.06,.48,.94) infinite alternate;
+    filter: drop-shadow(0 5px 30px #ffe08299);
+    transition: filter 0.4s;
+    position: relative;
+    z-index: 1;
+  }
+  @keyframes logo-bounce {
+    0% { transform: translateY(0) scale(1);}
+    20% { transform: translateY(-10px) scale(1.04);}
+    55% { transform: translateY(-18px) scale(1.08);}
+    70% { transform: translateY(-6px) scale(1.01);}
+    100% { transform: translateY(0) scale(1);}
+  }
+  .logo-anim img {
+    width: 95px; height: 95px; object-fit: contain;
+    animation: lemon-spin 2.7s linear infinite alternate;
+    transition: filter 0.4s;
+  }
+  @keyframes lemon-spin {
+    0% { transform: rotate(-7deg);}
+    100% { transform: rotate(10deg);}
+  }
+  h1 {
+    color: #f2b705;
+    text-align: center;
+    margin: 0 0 32px 0;
+    font-weight: 800;
+    font-size: 2.7rem;
+    letter-spacing: 0.7px;
+    text-shadow: 0 3px 16px #ffe08255, 0 1px 0 #fffbe7;
+    animation: fadeInDown 1s cubic-bezier(.36,.07,.19,.97);
+  }
+  @keyframes fadeInDown {
+    0% { opacity: 0; transform: translateY(-30px);}
+    100% { opacity: 1; transform: translateY(0);}
+  }
+  section {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 22px;
+    box-shadow: 0 7px 24px #f2b70522, 0 1.5px 7px #eee;
+    padding: 36px 24px 28px 24px;
+    margin-top: 32px;
+    animation: pop-in 0.8s cubic-bezier(.6,-0.28,.74,.05);
+    position: relative;
+    z-index: 1;
+    transition: box-shadow 0.4s, background 0.4s;
+    overflow: hidden;
+  }
+  @keyframes pop-in {
+    0% { transform: scale(0.9) translateY(40px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  h2 {
+    color: #d18e00;
+    border-bottom: 3px solid #f2b705;
+    padding-bottom: 8px;
+    margin-top: 0;
+    font-weight: 800;
+    margin-bottom: 26px;
+    font-size: 1.45rem;
+  }
+  label {
+    font-weight: 700;
+    margin-top: 12px;
+    display: block;
+    font-size: 1.07em;
+    letter-spacing: .2px;
+  }
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 13px 15px;
+    margin-top: 10px;
+    font-size: 17px;
+    border: 2px solid #f2b705;
+    border-radius: 9px;
+    background: #fff9db;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    margin-bottom: 7px;
+  }
+  input[type="password"]:focus,
+  input[type="text"]:focus {
+    border-color: #d18e00;
+    box-shadow: 0 0 8px #f2b705aa;
+    outline: none;
+  }
+  button {
+    margin-top: 18px;
+    background: linear-gradient(90deg,#f2b705 70%,#ffd54f 100%);
+    color: #3a2e00;
+    border: none;
+    padding: 14px 0;
+    font-weight: 900;
+    font-size: 1.08em;
+    width: 100%;
+    border-radius: 11px;
+    cursor: pointer;
+    box-shadow: 0 5px 12px #f2b705bb;
+    transition: background 0.3s, color 0.3s, transform 0.15s;
+    user-select: none;
+    letter-spacing: .5px;
+    position: relative;
+    z-index: 1;
+  }
+  button:hover, button:focus {
+    background: linear-gradient(90deg, #d18e00 70%, #ffd54f 100%);
+    color: #fff;
+    transform: scale(1.04);
+  }
+  button:active {
+    transform: scale(0.98);
+  }
+  .strength-bar {
+    height: 16px;
+    border-radius: 10px;
+    background: #eee;
+    margin-top: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px #ccc;
+  }
+  .strength-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #ddd;
+    transition: width 0.6s, background-color 0.6s;
+  }
+  #checkResult p {
+    margin: 10px 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .strong { color: #2f7a17;}
+  .medium { color: #b57f00;}
+  .weak { color: #a3220b;}
+  .info-box {
+    background: #fff3b0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    box-shadow: 0 0 10px #f2b705aa;
+    font-size: 14px;
+    color: #3a2e00;
+    animation: fadeinbox 0.5s;
+  }
+  @keyframes fadeinbox {
+    from {opacity:0;}
+    to {opacity:1;}
+  }
+  #passwords {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+    gap: 10px;
+  }
+  .password {
+    background: #fff8cc;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16.5px;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 0 8px #f2b70544;
+    transition: background 0.3s, color 0.3s;
+    text-align: center;
+    animation: fadeinbox 0.5s;
+  }
+  .password:hover, .password:focus {
+    background-color: #f2b705;
+    color: #fff;
+    outline: none;
+  }
+  small {
+    color: #666;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 7px;
+    margin-top: 1px;
+  }
+  
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 249, 196, 0.92);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.45s;
+    animation: fadeIn 0.6s;
+  }
+  .main-loader-lemon {
+    width: 120px; height: 120px;
+    position: relative;
+    display: flex;
+    align-items: center; justify-content: center;
+    animation: lemon-spin 1.7s linear infinite alternate;
+  }
+  .main-loader-lemon img {
+    width: 110px; height: 110px; object-fit: contain;
+    filter: drop-shadow(0 0 18px #ffe082cc);
+    animation: lemon-pop 1.5s cubic-bezier(.36,.07,.19,.97) infinite alternate;
+  }
+  @keyframes lemon-pop {
+    0% { filter: drop-shadow(0 0 0 #ffe082); }
+    30% { filter: drop-shadow(0 0 12px #ffe082); }
+    60% { filter: drop-shadow(0 6px 24px #ffe082); }
+    100% { filter: drop-shadow(0 0 0 #ffe082); }
+  }
+  @media(max-width: 600px){
+    section{padding:22px 4vw 18px 4vw;}
+    .logo-anim{margin-top:10px;}
+    h1{font-size:2.1rem;}
+  }
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="main-loader">
+  <div class="main-loader-lemon">
+    <img src="https://i.imgur.com/NDw7bQY.png" alt="lE loader" />
+  </div>
+</div>
+<div class="logo-anim">
+  <img src="https://i.imgur.com/NDw7bQY.png" alt="lE logo" />
+</div>
+<h1>LE Pass Check</h1>
+<section>
+  <h2>LE Password Strength Checker</h2>
+  <label for="checkPassword">Enter your password:</label>
+  <input type="password" id="checkPassword" placeholder="Enter your password" autocomplete="off" />
+  <button id="checkBtn" aria-label="Check password">Check Password</button>
+  <div class="strength-bar" aria-label="Password strength bar">
+    <div class="strength-fill" id="strengthFill"></div>
+  </div>
+  <div id="checkResult" aria-live="polite"></div>
+</section>
+<section>
+  <h2>Generate Passwords using Your Letters/Numbers</h2>
+  <label for="inputChars">Enter your own characters (letters/numbers/symbols):</label>
+  <input type="text" id="inputChars" placeholder="e.g. abc123" autocomplete="off" />
+  <small>At least 4 characters. Passwords will be generated using exactly and only your provided characters, 6 to 18 characters long.</small>
+  <button id="generateBtn" aria-label="Generate password">Generate Passwords</button>
+  <div id="passwords" aria-live="polite" aria-atomic="true"></div>
+</section>
+<!-- zxcvbn for strength checking -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+<script>
+  
+  window.addEventListener('DOMContentLoaded', () => {
+    const loader = document.getElementById('main-loader');
+    loader.style.display = 'flex';
+    setTimeout(() => {
+      loader.style.display = 'none';
+    }, 1200);
+  });
+
+  
+  function formatTime(seconds) {
+    if (seconds < 60) return `${Math.round(seconds)} seconds`;
+    else if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+    else if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+    else if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+    else return `${Math.round(seconds / 31536000)} years`;
+  }
+  function getColorByScore(score) {
+    if (score >= 3) return '#2f7a17';
+    if (score == 2) return '#b57f00';
+    return '#a3220b';
+  }
+  function getTextClass(score) {
+    if (score >= 3) return 'strong';
+    if (score == 2) return 'medium';
+    return 'weak';
+  }
+  
+  async function sha1(str) {
+    const buf = new TextEncoder('utf-8').encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', buf);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+  async function checkPwned(password) {
+    const hash = await sha1(password);
+    const prefix = hash.substring(0,5);
+    const suffix = hash.substring(5);
+
+    try {
+      const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+      if(!res.ok) throw new Error('Error contacting pwned API');
+      const text = await res.text();
+      const lines = text.split('\n');
+      for(let line of lines) {
+        const [hashSuffix, count] = line.split(':');
+        if(hashSuffix === suffix) {
+          return parseInt(count);
+        }
+      }
+      return 0;
+    } catch(e) {
+      console.error(e);
+      return -1;
+    }
+  }
+  
+  const checkBtn = document.getElementById('checkBtn');
+  const checkResult = document.getElementById('checkResult');
+  const strengthFill = document.getElementById('strengthFill');
+  checkBtn.onclick = async () => {
+    const pwd = document.getElementById('checkPassword').value.trim();
+    checkResult.innerHTML = '';
+    strengthFill.style.width = '0%';
+
+    if (!pwd) {
+      alert('Please enter your password.');
+      return;
+    }
+
+    const evaluation = zxcvbn(pwd);
+    const score = evaluation.score;
+    const crackTime = evaluation.crack_times_seconds.offline_slow_hashing_1e4_per_second;
+    const formattedTime = formatTime(crackTime);
+    const color = getColorByScore(score);
+    const textClass = getTextClass(score);
+
+    strengthFill.style.width = ((score + 1) * 20) + '%';
+    strengthFill.style.backgroundColor = color;
+
+    checkResult.innerHTML = `<p>Checking for known leaks...</p>`;
+
+    const pwnedCount = await checkPwned(pwd);
+
+    let pwnedMessage = '';
+    if (pwnedCount === -1) {
+      pwnedMessage = '<p class="info-box" style="color:#a3220b;">Could not check for leaks (network error).</p>';
+    } else if (pwnedCount > 0) {
+      pwnedMessage = `<p class="info-box" style="color:#a3220b;">This password has appeared <strong>${pwnedCount.toLocaleString()}</strong> times in leaked data! Please choose another password.</p>`;
+    } else {
+      pwnedMessage = `<p class="info-box" style="color:#2f7a17;">This password has NOT been seen in known leaks.</p>`;
+    }
+
+    let warning = evaluation.feedback.warning || '';
+    if (!warning && score < 3) {
+      warning = 'This password is weak, consider making it stronger.';
+    }
+    if (!warning && score >= 3) {
+      warning = 'Your password is strong.';
+    }
+
+    checkResult.innerHTML = `
+      <p>Password score: <strong class="${textClass}">${score} / 4</strong></p>
+      <p>Estimated time to brute-force (at 10,000 tries/sec): <strong style="color:${color};">${formattedTime}</strong></p>
+      <p>Advice: ${warning}</p>
+      <p>Suggestions: ${evaluation.feedback.suggestions.join(' ') || '-'}</p>
+      ${pwnedMessage}
+    `;
+  };
+
+  
+  
+  function generatePasswordStrict(chars, length) {
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  
+  function generatePronounceableFromCustom(chars, length) {
+    
+    const vowels = "aeiou";
+    const consonants = "bcdfghjklmnpqrstvwxyz";
+    let hasVowel = chars.split('').some(c => vowels.includes(c));
+    let hasCons = chars.split('').some(c => consonants.includes(c));
+    let pwd = '';
+    let type = Math.random() < 0.5 ? 'v' : 'c';
+    for (let i = 0; i < length; i++) {
+      let filtered = chars;
+      if (hasVowel && hasCons) {
+        if (type === 'v') filtered = chars.split('').filter(c => vowels.includes(c)).join('');
+        else filtered = chars.split('').filter(c => consonants.includes(c)).join('');
+        if (!filtered) filtered = chars; // fallback
+      }
+      pwd += filtered.charAt(Math.floor(Math.random() * filtered.length));
+      type = (type === 'v' ? 'c' : 'v');
+    }
+    return pwd;
+  }
+
+  const generateBtn = document.getElementById('generateBtn');
+  const passwordsDiv = document.getElementById('passwords');
+  generateBtn.onclick = () => {
+    passwordsDiv.innerHTML = '';
+    let chars = document.getElementById('inputChars').value.trim();
+
+    if (chars.length < 4) {
+      alert('Please enter at least 4 valid characters.');
+      return;
+    }
+    
+    chars = chars.replace(/[^a-zA-Z0-9@#$%&*!?]/g, '');
+    if (!chars) {
+      alert('Please enter valid characters (a-z, 0-9, @#$%&*!?)');
+      return;
+    }
+
+    const generated = [];
+    for (let len = 6; len <= 18; len += 2) {
+      
+      generated.push(generatePasswordStrict(chars, len));
+      generated.push(generatePronounceableFromCustom(chars, len));
+    }
+
+    
+    for (let i = generated.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      [generated[i], generated[j]] = [generated[j], generated[i]];
+    }
+
+    generated.forEach(pwd => {
+      const p = document.createElement('div');
+      p.className = 'password';
+      p.textContent = pwd;
+      p.title = 'Click to copy password';
+      p.setAttribute('tabindex', '0');
+      p.setAttribute('role', 'button');
+      p.setAttribute('aria-label', 'Copy password ' + pwd);
+
+      p.onclick = () => {
+        navigator.clipboard.writeText(pwd).then(() => {
+          p.textContent = 'Copied: ' + pwd;
+          setTimeout(() => (p.textContent = pwd), 1200);
+        });
+      };
+
+      p.onkeypress = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          p.click();
+        }
+      };
+
+      passwordsDiv.appendChild(p);
+    });
+
+    
+    passwordsDiv.style.opacity = '0.2';
+    setTimeout(() => {
+      passwordsDiv.style.transition = 'opacity 0.8s cubic-bezier(.49,.23,.46,1.09)';
+      passwordsDiv.style.opacity = '1';
+    }, 70);
+  };
+</script>
+</body>
+</html>

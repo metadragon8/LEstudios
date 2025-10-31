@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lemonz Liquidity Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-color: #fefce8;
+            --card-bg-color: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #5a5a5a;
+            --border-color: #eef1f5;
+            --accent-color: #facc15;
+            --accent-green: #2ecc71;
+            --shadow-color: rgba(145, 107, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container { max-width: 800px; margin: 0 auto; animation: fadeIn 0.7s ease-out; }
+        header { text-align: center; margin-bottom: 40px; }
+        header h1 { font-size: 2.8rem; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        header .logo-icon { color: var(--accent-color); }
+        header p { color: var(--text-secondary); font-size: 1.1rem; }
+        
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            background: var(--card-bg-color);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            flex-wrap: wrap;
+        }
+
+        .input-group { flex-grow: 1; min-width: 250px; }
+        #contract-input {
+            width: 100%; padding: 15px; border-radius: 12px;
+            border: 2px solid var(--border-color); font-size: 1rem;
+            background-color: var(--bg-color); color: var(--text-primary);
+            transition: border-color 0.3s, box-shadow 0.3s; box-sizing: border-box;
+        }
+        
+        #contract-input:focus {
+            outline: none; border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.3);
+        }
+
+        #find-btn {
+            padding: 15px 30px; border: none; background-color: var(--accent-color);
+            color: var(--text-primary); font-weight: 600; font-size: 1rem; border-radius: 12px;
+            cursor: pointer; transition: transform 0.2s, filter 0.2s;
+        }
+
+        #find-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .loader {
+            display: none; margin: 40px auto; border: 6px solid var(--border-color);
+            border-top: 6px solid var(--accent-color); border-radius: 50%; width: 50px;
+            height: 50px; animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #results-container { display: grid; gap: 20px; }
+        .pool-card {
+            background-color: var(--card-bg-color); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 20px; display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 15px; animation: fadeIn 0.5s ease-out;
+        }
+        .pool-info .pair { font-size: 1.3rem; font-weight: 600; }
+        .pool-info .dex { font-size: 0.9rem; color: var(--text-secondary); text-transform: capitalize; }
+        
+        .pool-actions .amount { font-size: 1.5rem; font-weight: 700; color: var(--accent-green); }
+        .pool-actions .trade-link {
+            display: inline-block; padding: 6px 12px; background: var(--accent-color);
+            color: var(--text-primary); text-decoration: none; border-radius: 8px;
+            margin-top: 5px; transition: transform 0.2s; text-align: center;
+        }
+        .trade-link:hover { transform: scale(1.05); }
+
+        #message-area { text-align: center; color: var(--text-secondary); font-size: 1.1rem; padding-top: 20px;}
+
+        .select2-container .select2-selection--single { height: 53px; border-radius: 12px; border: 2px solid var(--border-color); background-color: var(--bg-color); }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { color: var(--text-primary); line-height: 50px; padding-left: 15px;}
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 50px; }
+        .select2-dropdown { background-color: var(--card-bg-color); border: 2px solid var(--border-color); border-radius: 12px; }
+        .select2-search--dropdown .select2-search__field { background-color: var(--bg-color); border-color: var(--border-color); color: var(--text-primary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fa-solid fa-water-ladder logo-icon"></i>LE Liquidity Explorer</h1>
+            <p>Find where a token has the most liquidity across decentralized exchanges.</p>
+        </header>
+
+        <div class="search-box">
+            <div class="input-group">
+                 <select id="chain-select" style="width: 100%;">
+                    <option value="">All Chains</option>
+                    <option value="solana">Solana</option>
+                    <option value="ethereum">Ethereum</option>
+                    <option value="base">Base</option>
+                    <option value="bsc">BNB Smart Chain (BSC)</option>
+                    <option value="pulsechain">PulseChain</option>
+                    <option value="ton">TON</option>
+                    <option value="polygon">Polygon</option>
+                    <option value="sui">Sui</option>
+                    <option value="avalanche">Avalanche</option>
+                    <option value="arbitrum">Arbitrum</option>
+                    <option value="xrpl">XRPL</option>
+                    <option value="linea">Linea</option>
+                    <option value="cronos">Cronos</option>
+                    <option value="osmosis">Osmosis</option>
+                    <option value="hedera">Hedera</option>
+                    <option value="near">NEAR</option>
+                    <option value="berachain">Berachain</option>
+                    <option value="tron">Tron</option>
+                    <option value="sei">Sei V2</option>
+                    <option value="optimism">Optimism</option>
+                    <option value="aptos">Aptos</option>
+                    <option value="cardano">Cardano</option>
+                    <option value="icp">ICP</option>
+                    <option value="starknet">Starknet</option>
+                    <option value="zksync">zkSync Era</option>
+                    <option value="mantle">Mantle</option>
+                    <option value="flare">Flare</option>
+                    <option value="multiversx">MultiversX</option>
+                    <option value="fantom">Fantom</option>
+                    <option value="blast">Blast</option>
+                    <option value="core">Core</option>
+                    <option value="dogechain">Dogechain</option>
+                    <option value="apechain">ApeChain</option>
+                    <option value="algorand">Algorand</option>
+                    <option value="shibarium">Shibarium</option>
+                    <option value="beam">Beam</option>
+                    <option value="conflux">Conflux</option>
+                    <option value="scroll">Scroll</option>
+                    <option value="injective">Injective</option>
+                    <option value="celo">Celo</option>
+                    <option value="metis">Metis</option>
+                    <option value="harmony">Harmony</option>
+                    <option value="moonbeam">Moonbeam</option>
+                    <option value="mode">Mode</option>
+                    <option value="zora">Zora</option>
+                    <option value="ethclassic">Ethereum Classic</option>
+                    <option value="manta">Manta</option>
+                    <option value="gnosischain">Gnosis Chain</option>
+                    <option value="merlin">Merlin Chain</option>
+                    <option value="venom">Venom</option>
+                    <option value="fraxtal">Fraxtal</option>
+                    <option value="opbnb">opBNB</option>
+                    <option value="kava">Kava</option>
+                    <option value="aurora">Aurora</option>
+                    <option value="iotex">IoTeX</option>
+                    <option value="velas">Velas</option>
+                    <option value="fuse">Fuse</option>
+                    <option value="polygonzkevm">Polygon zkEVM</option>
+                    <option value="telos">Telos</option>
+                    <option value="arbitrumnova">Arbitrum Nova</option>
+                    <option value="elastos">Elastos</option>
+                    <option value="zetachain">ZetaChain</option>
+                    <option value="astar">Astar</option>
+                    <option value="moonriver">Moonriver</option>
+                    <option value="taiko">Taiko</option>
+                    <option value="boba">Boba</option>
+                    <option value="meter">Meter</option>
+                    <option value="neonevm">Neon EVM</option>
+                    <option value="evmos">Evmos</option>
+                    <option value="bitgert">Bitgert</option>
+                    <option value="kcc">KCC</option>
+                    <option value="zkfair">ZKFair</option>
+                </select>
+            </div>
+             <div class="input-group">
+                <input type="text" id="contract-input" placeholder="Enter token contract address">
+             </div>
+            <button id="find-btn"><i class="fa-solid fa-search"></i> Find</button>
+        </div>
+        
+        <div class="loader" id="loader"></div>
+        <div id="results-container"></div>
+        <div id="message-area"></div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        const WORKER_URL = 'https://sparkling-sky-eba7.lemonzm7.workers.dev/';
+
+        $(document).ready(function() {
+            $('#chain-select').select2();
+        });
+
+        const findBtn = document.getElementById('find-btn');
+        const contractInput = document.getElementById('contract-input');
+        const chainSelect = $('#chain-select'); 
+        const resultsContainer = document.getElementById('results-container');
+        const loader = document.getElementById('loader');
+        const messageArea = document.getElementById('message-area');
+
+        const findLiquidity = async () => {
+            const contractAddress = contractInput.value.trim();
+            const selectedChain = chainSelect.val();
+            
+            if (!contractAddress) {
+                messageArea.textContent = 'Please enter a contract address.';
+                return;
+            }
+
+            loader.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            messageArea.innerHTML = '';
+            findBtn.disabled = true;
+
+            try {
+                let fetchUrl = `${WORKER_URL}?contract=${contractAddress}`;
+                if (selectedChain) {
+                    fetchUrl += `&chain=${selectedChain}`;
+                }
+
+                const response = await fetch(fetchUrl);
+                if (!response.ok) throw new Error('Network error or invalid address.');
+                const pools = await response.json();
+                displayResults(pools);
+
+            } catch (error) {
+                messageArea.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Could not fetch liquidity data. Please check the contract address and chain.`;
+            } finally {
+                loader.style.display = 'none';
+                findBtn.disabled = false;
+            }
+        };
+
+        const displayResults = (pools) => {
+            if (pools.length === 0) {
+                messageArea.textContent = 'No significant liquidity pools found for this token on the selected chain.';
+                return;
+            }
+            
+            pools.forEach(pool => {
+                const card = document.createElement('div');
+                card.className = 'pool-card';
+
+                const formattedLiquidity = new Intl.NumberFormat('en-US', {
+                    style: 'currency', currency: 'USD', notation: 'compact',
+                    maximumFractionDigits: 2
+                }).format(pool.liquidity);
+
+                const dexName = pool.dex.charAt(0).toUpperCase() + pool.dex.slice(1);
+
+                card.innerHTML = `
+                    <div class="pool-info">
+                        <div class="pair">${pool.baseToken} / ${pool.quoteToken}</div>
+                        <div class="dex">${dexName} (${pool.chainId})</div>
+                    </div>
+                    <div class="pool-actions" style="text-align: right;">
+                        <div class="amount">${formattedLiquidity}</div>
+                        <a href="${pool.url}" class="trade-link" target="_blank" rel="noopener noreferrer">
+                           View on ${dexName} <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        };
+
+        findBtn.addEventListener('click', findLiquidity);
+        contractInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                findLiquidity();
+            }
+        });
+    </script>
+</body>
+</html>

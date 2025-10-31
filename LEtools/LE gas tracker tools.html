@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LE Gas Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #fefce8;
+            --card-bg-color: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #5a5a5a;
+            --border-color: #eef1f5;
+            --accent-color: #facc15;
+            --accent-text: #1a1a1a;
+            --shadow-color: rgba(145, 107, 0, 0.1);
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg-color: #1e1e1e;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --border-color: #2f2f2f;
+            --accent-color: #fde047;
+            --accent-text: #1a1a1a;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-primary);
+        }
+
+        h1 .logo-icon {
+            color: var(--accent-color);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background-color: var(--card-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            padding: 25px;
+            border-top: 5px solid var(--accent-color);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+        }
+
+        .card.loading {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card-header {
+            margin: 0;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+        
+        .chain-logo {
+            width: 26px;
+            height: 26px;
+        }
+
+        .fee-level {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fee-label {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .fee-value {
+            font-family: monospace;
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .fee-details {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+        .theme-switch input {
+            display: none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            background-color: white;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .theme-switch-wrapper i {
+             margin: 0 10px;
+             color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1></i> LE Gas Tracker</h1>
+        <div class="theme-switch-wrapper">
+            <i class="fas fa-sun"></i>
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+            <i class="fas fa-moon"></i>
+        </div>
+    </header>
+
+    <div class="container" id="gas-container"></div>
+    
+    <script>
+        const chainsToShow = ['ethereum', 'arbitrum', 'base', 'optimism', 'polygon', 'bsc'];
+        const WORKER_URL = 'https://small-darkness-2bf6.lemonzm7.workers.dev/';
+        
+        const container = document.getElementById('gas-container');
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        const chainLogos = {
+            ethereum: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Eth-diamond-rainbow.png',
+            arbitrum: 'https://images.prismic.io/uphold/df0f4351-13dc-4f5f-bede-7c99e7234d34_ARB%402x.png?auto=compress,format',
+            base: 'https://payload-marketing.moonpay.com/api/media/file/base%20logo.webp',
+            optimism: 'https://files.swissborg.com/product/wealth-app/assets/ic_crypto_op.png',
+            polygon: 'https://upload.wikimedia.org/wikipedia/commons/2/21/Polygon_Icon.svg',
+            bsc: 'https://zengo.com/wp-content/uploads/BNB-Chain-1.png'
+        };
+
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+        })();
+
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        function createLoadingCards() {
+            let html = '';
+            chainsToShow.forEach(chain => {
+                const displayName = chain.charAt(0).toUpperCase() + chain.slice(1);
+                const logoUrl = chainLogos[chain] || '';
+                
+                html += `
+                    <div class="card loading" id="card-${chain}">
+                       <div class="card-header">
+                           <img src="${logoUrl}" alt="${displayName} Logo" class="chain-logo">
+                           ${displayName}
+                       </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderCard(id, data) {
+            const card = document.getElementById(`card-${id}`);
+            if (!card) return;
+            card.classList.remove('loading');
+            
+            if (data.error) {
+                card.innerHTML += `<p style="color:red">Error: ${data.error}</p>`;
+                return;
+            }
+
+            const logoSrc = card.querySelector('.chain-logo').src;
+            const hasPriority = data.low.priority !== undefined;
+            const totalFee = data.low.total || 'N/A';
+            const detailsHtml = hasPriority 
+                ? `<div class="fee-details">Base: ${data.base} | Priority: ${data.low.priority}</div>`
+                : '';
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <img src="${logoSrc}" alt="${data.name} Logo" class="chain-logo">
+                    ${data.name}
+                </div>
+                <div class="fee-level">
+                    <span class="fee-label">Current Fee</span>
+                    <span class="fee-value">${totalFee}</span>
+                </div>
+                ${detailsHtml}
+            `;
+        }
+        
+        async function fetchGasPrices() {
+            try {
+                const response = await fetch(`${WORKER_URL}?t=${new Date().getTime()}`);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                
+                const gasData = await response.json();
+                
+                chainsToShow.forEach(chain => {
+                    if (gasData[chain]) {
+                        renderCard(chain, gasData[chain]);
+                    }
+                });
+            } catch (error) {
+                console.error("Failed to fetch gas prices:", error);
+            }
+        }
+        
+        createLoadingCards();
+        fetchGasPrices();
+        setInterval(fetchGasPrices, 20000);
+    </script>
+</body>
+</html>

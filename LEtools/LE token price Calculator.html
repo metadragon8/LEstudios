@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LE Token Price Calculator</title>
+    <style>
+        :root {
+            --bg-color-dark: #121826;
+            --container-bg-dark: #1A2035;
+            --text-color-dark: #E0E0E0;
+            --text-muted-dark: #8A93B2;
+            --border-color-dark: #333C57;
+            --input-bg-dark: #121826;
+            --accent-color-dark: #45D484;
+            --focus-ring-dark: rgba(74, 144, 226, 0.2);
+
+            --bg-color-light: #FEFDF8;
+            --container-bg-light: #FFFFFF;
+            --text-color-light: #1A2035;
+            --text-muted-light: #5A637F;
+            --border-color-light: #DDE2EC;
+            --input-bg-light: #F7F9FC;
+            --accent-color-light: #2E8B57;
+            --focus-ring-light: rgba(255, 204, 0, 0.3);
+
+            --theme-transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: var(--theme-transition);
+        }
+        
+        .theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+
+        #theme-toggle-btn {
+            background: var(--container-bg-dark);
+            border: 1px solid var(--border-color-dark);
+            color: var(--text-color-dark);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s ease, var(--theme-transition);
+        }
+
+        #theme-toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--container-bg-dark);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color-dark);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--theme-transition);
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-column, .output-column {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        h1, h2 {
+            margin: 0 0 10px 0;
+            color: var(--text-color-dark);
+            transition: color 0.4s ease;
+        }
+        
+        .main-title {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .main-title h1 {
+            font-size: 2.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted-dark);
+            margin-top: -5px;
+            margin-bottom: 30px;
+            transition: color 0.4s ease;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-muted-dark);
+            transition: color 0.4s ease;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper span.prefix {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted-dark);
+            font-weight: 500;
+            transition: color 0.4s ease;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 18px;
+            background-color: var(--input-bg-dark);
+            border: 1px solid var(--border-color-dark);
+            border-radius: 10px;
+            color: var(--text-color-dark);
+            font-size: 1rem;
+            font-weight: 500;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s, var(--theme-transition);
+        }
+        
+        .input-field.prefixed {
+             padding-left: 35px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #FACC15;
+            box-shadow: 0 0 0 4px var(--focus-ring-dark);
+        }
+        
+        .output-column {
+            background-color: var(--input-bg-dark);
+            border-radius: 18px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid var(--border-color-dark);
+            transition: var(--theme-transition);
+        }
+
+        .price-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .price-entry h3 {
+            color: var(--text-muted-dark);
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 500;
+            transition: color 0.4s ease;
+        }
+
+        .price-entry .price {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent-color-dark);
+            word-wrap: break-word;
+            transition: color 0.4s ease;
+        }
+
+        .separator {
+            width: 100%;
+            height: 1px;
+            background-color: var(--border-color-dark);
+            border: 0;
+            margin: 15px 0;
+            transition: background-color 0.4s ease;
+        }
+
+        body.light-mode {
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+        }
+        
+        body.light-mode #theme-toggle-btn {
+            background: var(--container-bg-light);
+            border: 1px solid var(--border-color-light);
+            color: var(--text-color-light);
+        }
+
+        body.light-mode .container {
+            background: var(--container-bg-light);
+            border-color: var(--border-color-light);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        body.light-mode h1,
+        body.light-mode h2 {
+            color: var(--text-color-light);
+        }
+        
+        body.light-mode .subtitle,
+        body.light-mode .input-group label,
+        body.light-mode .input-wrapper span.prefix,
+        body.light-mode .price-entry h3 {
+            color: var(--text-muted-light);
+        }
+        
+        body.light-mode .input-field {
+            background-color: var(--input-bg-light);
+            border-color: var(--border-color-light);
+            color: var(--text-color-light);
+        }
+
+        body.light-mode .input-field:focus {
+            border-color: #FDBA74;
+            box-shadow: 0 0 0 4px var(--focus-ring-light);
+        }
+
+        body.light-mode .output-column {
+            background-color: var(--input-bg-light);
+            border-color: var(--border-color-light);
+        }
+        
+        body.light-mode .price-entry .price {
+             color: var(--accent-color-light);
+        }
+
+        body.light-mode .separator {
+            background-color: var(--border-color-light);
+        }
+
+
+        @media (max-width: 680px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="theme-switcher">
+        <button id="theme-toggle-btn">🌙</button>
+    </div>
+
+    <div class="container">
+        <div class="main-title">
+            <h1> LE Token Price Calculator</h1>
+            <p class="subtitle">Enter your token's metrics to find its implied price.</p>
+        </div>
+
+        <div class="input-column">
+            <h2>Token Metrics</h2>
+            
+            <div class="input-group">
+                <label for="circulatingSupply">Circulating Supply</label>
+                <input type="text" id="circulatingSupply" class="input-field" placeholder="e.g., 500,000,000">
+            </div>
+
+            <div class="input-group">
+                <label for="totalSupply">Total Supply</label>
+                <input type="text" id="totalSupply" class="input-field" placeholder="e.g., 1,000,000,000">
+            </div>
+
+            <div class="input-group">
+                <label for="maxSupply">Max Supply (optional)</label>
+                <input type="text" id="maxSupply" class="input-field" placeholder="e.g., 2,000,000,000">
+            </div>
+
+            <div class="input-group">
+                <label for="marketCap">Market Cap (MC)</label>
+                <div class="input-wrapper">
+                    <span class="prefix">$</span>
+                    <input type="text" id="marketCap" class="input-field prefixed" placeholder="e.g., 1,250,000,000">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="fdv">Fully Diluted Valuation (FDV)</label>
+                <div class="input-wrapper">
+                    <span class="prefix">$</span>
+                    <input type="text" id="fdv" class="input-field prefixed" placeholder="e.g., 2,500,000,000">
+                </div>
+            </div>
+        </div>
+
+        <div class="output-column">
+             <h2>Target Price</h2>
+             <div class="price-entry">
+                 <h3>Based on Market Cap</h3>
+                 <p id="priceFromMarketCap" class="price">$0.00</p>
+             </div>
+            
+             <hr class="separator">
+
+             <div class="price-entry">
+                 <h3>Based on FDV</h3>
+                 <p id="priceFromFDV" class="price">$0.00</p>
+             </div>
+        </div>
+
+    </div>
+
+    <script>
+        const allInputs = document.querySelectorAll('.input-field');
+        const marketCapInput = document.getElementById('marketCap');
+        const circulatingSupplyInput = document.getElementById('circulatingSupply');
+        const fdvInput = document.getElementById('fdv');
+        const totalSupplyInput = document.getElementById('totalSupply');
+
+        const priceFromMarketCapOutput = document.getElementById('priceFromMarketCap');
+        const priceFromFDVOutput = document.getElementById('priceFromFDV');
+        
+        const themeToggleButton = document.getElementById('theme-toggle-btn');
+        const body = document.body;
+
+        const parseValue = (value) => parseFloat(value.replace(/,/g, '')) || 0;
+        const formatNumber = (num) => (num === 0) ? '' : num.toLocaleString('en-US');
+        const formatPrice = (price) => {
+            if (!price || price === 0 || !isFinite(price)) return '$0.00';
+            if (price < 0.000001) {
+                 return '$' + price.toExponential(4);
+            }
+            return '$' + price.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 8
+            });
+        };
+        
+        function calculateAndDisplay() {
+            const marketCap = parseValue(marketCapInput.value);
+            const circulatingSupply = parseValue(circulatingSupplyInput.value);
+            let priceFromMC = (marketCap > 0 && circulatingSupply > 0) ? marketCap / circulatingSupply : 0;
+            priceFromMarketCapOutput.textContent = formatPrice(priceFromMC);
+            
+            const fdv = parseValue(fdvInput.value);
+            const totalSupply = parseValue(totalSupplyInput.value);
+            let priceFromFDV = (fdv > 0 && totalSupply > 0) ? fdv / totalSupply : 0;
+            priceFromFDVOutput.textContent = formatPrice(priceFromFDV);
+        }
+
+        allInputs.forEach(input => {
+            input.addEventListener('input', calculateAndDisplay);
+            input.addEventListener('blur', (e) => {
+                 const value = parseValue(e.target.value);
+                 e.target.value = formatNumber(value);
+            });
+            input.addEventListener('focus', (e) => {
+                 const value = parseValue(e.target.value);
+                 e.target.value = (value !== 0) ? value : '';
+            });
+        });
+        
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'light') {
+            body.classList.add('light-mode');
+            themeToggleButton.textContent = '🌙';
+        } else {
+             themeToggleButton.textContent = '☀️';
+        }
+
+        themeToggleButton.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            let theme = 'dark';
+            if (body.classList.contains('light-mode')) {
+                theme = 'light';
+                themeToggleButton.textContent = '🌙';
+            } else {
+                 themeToggleButton.textContent = '☀️';
+            }
+            localStorage.setItem('theme', theme);
+        });
+
+        calculateAndDisplay();
+    </script>
+</body>
+</html>

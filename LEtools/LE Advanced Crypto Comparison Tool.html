@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LE Advanced Crypto Comparison Tool</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-primary: #121826; --bg-secondary: #1A2035; --border-color: #333C57;
+            --text-primary: #E0E0E0; --text-secondary: #8A93B2; --accent-blue: #4A90E2;
+            --accent-green: #45D484; --accent-purple: #9055A2; --shadow-color: rgba(0, 0, 0, 0.2);
+            --font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body.light-theme {
+            --bg-primary: #FFFBEB; --bg-secondary: #FFFFFF; --border-color: #EAEAEA;
+            --text-primary: #2C3E50; --text-secondary: #7F8C8D; --shadow-color: rgba(0, 0, 0, 0.08);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { 
+            font-family: var(--font-family); background-color: var(--bg-primary); color: var(--text-primary);
+            margin: 0; padding: 25px; display: flex; justify-content: center;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        .container { max-width: 1000px; width: 100%; animation: fadeIn 0.8s ease-out; }
+        h1, .subtitle { text-align: center; }
+        h1 { color: var(--text-primary); }
+        .subtitle { color: var(--text-secondary); margin-bottom: 30px; }
+        #theme-toggle {
+            position: fixed; top: 20px; right: 20px; z-index: 1000; cursor: pointer;
+            background-color: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 50%; width: 45px; height: 45px; display: flex;
+            justify-content: center; align-items: center; font-size: 1.5rem;
+            box-shadow: 0 4px 10px var(--shadow-color); transition: all 0.3s ease;
+        }
+        #theme-toggle:hover { transform: scale(1.1) rotate(15deg); }
+        .mode-switcher { margin-bottom: 30px; display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-secondary); transition: .4s; border-radius: 34px; border: 1px solid var(--border-color);}
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 3px; background-color: var(--text-secondary); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-purple); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: #FFF; }
+        .comparison-pair { display: flex; align-items: stretch; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .coin-column { flex: 1; min-width: 280px; max-width: 400px; background: var(--bg-secondary); padding: 25px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 5px 15px var(--shadow-color); transition: all 0.3s ease; }
+        .coin-column:hover { transform: translateY(-5px); }
+        .separator { font-size: 2rem; color: var(--accent-blue); font-weight: bold; align-self: center; padding: 20px 10px; }
+        #advanced-mode-container { display: none; }
+        .pair-container { border: 1px dashed var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 30px; animation: fadeIn 0.5s ease-out; }
+        .pair-result-container, #grand-result-container { animation: fadeIn 0.5s ease-out; text-align: center; }
+        .pair-result-container { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: none; }
+        #grand-result-container { background: var(--bg-secondary); border: 2px solid var(--accent-purple); margin-top: 40px; padding: 30px; border-radius: 16px; display: none; }
+        
+        .coin-card { min-height: 150px; margin-top: 20px; position: relative; animation: fadeIn 0.4s ease; }
+        .coin-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .coin-header img { width: 48px; height: 48px; border-radius: 50%; animation: fadeIn 0.5s; }
+        .coin-header h3 { margin: 0; font-size: 1.5rem; }
+        .coin-header span.symbol { font-size: 1rem; color: var(--text-secondary); background-color: var(--bg-primary); padding: 2px 8px; border-radius: 6px; }
+        .coin-stats p { display: flex; justify-content: space-between; margin: 8px 0; font-size: 1.05rem; }
+
+        .select2-container--default .select2-selection--single { background-color: var(--bg-primary); border: 1px solid var(--border-color); height: 45px; transition: all 0.3s ease; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { color: var(--text-primary); line-height: 43px; }
+        .select2-dropdown { background-color: var(--bg-secondary); border: 1px solid var(--border-color); }
+        .select2-search--dropdown .select2-search__field { background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); }
+    </style>
+</head>
+<body>
+
+    <div id="theme-toggle">🌙</div>
+
+    <div class="container">
+        <h1>LE Advanced Crypto Comparison Tool</h1>
+        <p class="subtitle">Compare market cap scenarios, side-by-side.</p>
+        <div class="mode-switcher"><span>Simple (2-way)</span><label class="toggle-switch"><input type="checkbox" id="mode-toggle"><span class="slider"></span></label><span>Advanced (4-way)</span></div>
+        <div id="simple-mode-container"><div class="comparison-pair"><div class="coin-column"><h4>Coin A</h4><select class="coin-select" id="coinA-select"></select><div class="coin-card" id="coinA-card"></div></div><div class="separator">→</div><div class="coin-column"><h4>Coin B</h4><select class="coin-select" id="coinB-select"></select><div class="coin-card" id="coinB-card"></div></div></div><div class="pair-result-container" id="result-AB"></div></div>
+        <div id="advanced-mode-container"><div class="pair-container"><h2>Comparison Scenario 1</h2><div class="comparison-pair"><div class="coin-column"><h4>Coin C</h4><select class="coin-select" id="coinC-select"></select><div class="coin-card" id="coinC-card"></div></div><div class="separator">→</div><div class="coin-column"><h4>Coin D</h4><select class="coin-select" id="coinD-select"></select><div class="coin-card" id="coinD-card"></div></div></div><div class="pair-result-container" id="result-CD"></div></div><div class="pair-container"><h2>Comparison Scenario 2</h2><div class="comparison-pair"><div class="coin-column"><h4>Coin E</h4><select class="coin-select" id="coinE-select"></select><div class="coin-card" id="coinE-card"></div></div><div class="separator">→</div><div class="coin-column"><h4>Coin F</h4><select class="coin-select" id="coinF-select"></select><div class="coin-card" id="coinF-card"></div></div></div><div class="pair-result-container" id="result-EF"></div></div></div>
+        <div id="grand-result-container"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        const WORKER_URL = 'https://raspy-bird-4a99.lemonzm7.workers.dev/'; 
+        let coinData = {};
+        let results = {};
+
+        $(document).ready(async function() {
+            $('.coin-select').select2({ placeholder: 'Loading coins...', width: '100%' });
+
+            $('#mode-toggle').on('change', function() {
+                const isAdvanced = $(this).is(':checked');
+                $('#simple-mode-container').toggle(!isAdvanced);
+                $('#advanced-mode-container').toggle(isAdvanced);
+                coinData = {}; results = {};
+                $('.coin-card').empty();
+                $('.pair-result-container, #grand-result-container').hide();
+                $('.coin-select').val(null).trigger('change');
+            });
+            
+            $('#theme-toggle').on('click', function() {
+                $('body').toggleClass('light-theme');
+                const isLight = $('body').hasClass('light-theme');
+                $(this).text(isLight ? '☀️' : '🌙');
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            });
+            
+            if (localStorage.getItem('theme') === 'light') {
+                $('body').addClass('light-theme');
+                $('#theme-toggle').text('☀️');
+            }
+            
+            async function fetchWithRetry(url, retries = 5, delay = 1000) {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        console.log(`Attempt ${i + 1} of ${retries} to fetch coin list...`);
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            if (response.status === 429) {
+                                console.warn(`Attempt ${i + 1} failed: Rate limited (429). Retrying in ${delay / 1000}s...`);
+                                await new Promise(res => setTimeout(res, delay));
+                                continue;
+                            }
+                            throw new Error(`Could not load coin list. Server responded with status: ${response.status}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        if (i === retries - 1) throw error;
+                    }
+                }
+                throw new Error('Could not load coin list after multiple attempts.');
+            }
+
+            try {
+                const coinList = await fetchWithRetry(`${WORKER_URL}?full_list=true`);
+                
+                const formattedList = coinList.map(c => ({ id: c.id, text: `${c.name} (${c.symbol.toUpperCase()})` }));
+                $('.coin-select').select2({ placeholder: 'Search for a coin...', data: formattedList, width: '100%' }).val(null).trigger('change');
+            } catch (error) {
+                alert(error.message);
+                $('.coin-select').select2({ placeholder: 'Error loading list!' });
+            }
+        });
+        
+        $('.coin-select').on('select2:select', function (e) {
+            const coinId = e.params.data.id;
+            const target = $(this).attr('id').substring(4, 5);
+            fetchCoinData(coinId, target);
+        });
+        
+        async function fetchCoinData(coinId, target) {
+            const card = $(`#coin${target}-card`);
+            card.html('Loading...');
+            
+            try {
+                const response = await fetch(`${WORKER_URL}?id=${coinId}`);
+                if (!response.ok) throw new Error('Data not found for this coin.');
+                const data = await response.json();
+                coinData[target] = data;
+                
+                updateCardUI(target);
+                
+                if (['A', 'B'].includes(target)) performComparison('A', 'B');
+                if (['C', 'D'].includes(target)) performComparison('C', 'D');
+                if (['E', 'F'].includes(target)) performComparison('E', 'F');
+
+            } catch (error) { card.html(`<p style="color:red;">${error.message}</p>`); }
+        }
+
+        function updateCardUI(target) {
+            const data = coinData[target];
+            const card = $(`#coin${target}-card`);
+            const formatPrice = p => p?.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: p > 1 ? 2 : 8 }) || 'N/A';
+            const formatMC = mc => mc?.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }) || 'N/A';
+            
+            if (data?.image && data?.market_data) {
+                card.html(`
+                    <div class="coin-header">
+                        <img src="${data.image}" alt="${data.name}">
+                        <div><h3>${data.name}</h3><span class="symbol">${data.symbol}</span></div>
+                    </div>
+                    <div class="coin-stats">
+                        <p><span>Price:</span> <span>${formatPrice(data.market_data.current_price)}</span></p>
+                        <p><span>Market Cap:</span> <span>${formatMC(data.market_data.market_cap)}</span></p>
+                    </div>`);
+            } else {
+                 card.html(`<p style="color:red;">Incomplete data received.</p>`);
+            }
+        }
+        
+        function performComparison(baseKey, targetKey) {
+            const resultKey = `${baseKey}${targetKey}`;
+            const resultContainer = $(`#result-${resultKey}`);
+            const baseCoin = coinData[baseKey];
+            const targetCoin = coinData[targetKey];
+            
+            if (baseCoin && targetCoin) {
+                const baseMD = baseCoin.market_data;
+                const targetMD = targetCoin.market_data;
+                if (baseMD?.circulating_supply > 0 && baseMD?.current_price > 0 && targetMD?.market_cap) {
+                    const newPrice = targetMD.market_cap / baseMD.circulating_supply;
+                    const growthX = newPrice / baseMD.current_price;
+                    results[resultKey] = { newPrice, growthX };
+                    
+                    const formatPrice = p => p?.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: p > 1 ? 2 : 8 }) || 'N/A';
+                    resultContainer.html(`Potential Price: <strong>${formatPrice(newPrice)}</strong> (${growthX.toFixed(2)}x growth)`).show();
+                    
+                    compareTheComparisons();
+                } else {
+                    resultContainer.hide();
+                }
+            }
+        }
+        
+        function compareTheComparisons() {
+            if (!$('#mode-toggle').is(':checked')) {
+                 $('#grand-result-container').hide();
+                 return;
+            }
+
+            if (results.CD && results.EF) {
+                const growthCD = results.CD.growthX;
+                const growthEF = results.EF.growthX;
+                
+                let summary;
+                if (growthCD > growthEF) {
+                    summary = `Scenario 1 shows a <strong style="color: var(--accent-green);">${(growthCD / growthEF).toFixed(2)}x</strong> higher growth potential than Scenario 2.`;
+                } else if (growthEF > growthCD) {
+                    summary = `Scenario 2 shows a <strong style="color: var(--accent-green);">${(growthEF / growthCD).toFixed(2)}x</strong> higher growth potential than Scenario 1.`;
+                } else {
+                    summary = `Both scenarios show a nearly identical growth potential.`;
+                }
+                $('#grand-result-container').html(`<div style="font-size: 1.5rem; margin-bottom: 20px;">Final Analysis</div><div style="font-size: 1.2rem;">${summary}</div>`).show();
+            } else {
+                $('#grand-result-container').hide();
+            }
+        }
+    </script>
+</body>
+</html>

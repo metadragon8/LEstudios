@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LECalculator - High Precision Scientific Calculator</title>
+    <style>
+        @keyframes gradient-animation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes modal-open { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes modal-close { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        :root {
+            --bg-main: #12181f; --bg-calc: #1a222c; --display-bg: #101419;
+            --text-primary: #e1e1e1; --text-secondary: #8e949a; --accent-color: #3d8bff;
+            --btn-bg: #212c38; --btn-hover: #2c3a49; --operator-color: #2ed3a2;
+            --special-color: #ff6a6a; --shadow-light: rgba(255, 255, 255, 0.05);
+            --shadow-dark: rgba(0, 0, 0, 0.4);
+        }
+
+        body.light-theme {
+            --bg-main: #fffbeb; --bg-calc: #ffffff; --display-bg: #fdfaf0;
+            --text-primary: #3d3d3d; --text-secondary: #7a7a7a; --accent-color: #ffc107;
+            --btn-bg: #f9f9f9; --btn-hover: #f0f0f0; --operator-color: #388e3c;
+            --special-color: #d32f2f; --shadow-light: rgba(255, 255, 255, 0.5);
+            --shadow-dark: rgba(0, 0, 0, 0.1);
+        }
+        
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(-45deg, var(--bg-main), #2c3e50, var(--bg-main), #1d2b3a); background-size: 400% 400%; animation: gradient-animation 15s ease infinite; color: var(--text-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; transition: background-color 0.4s ease; }
+        .calculator-container { width: 100%; max-width: 480px; padding: 15px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .title { text-align: center; color: var(--text-secondary); font-weight: 300; letter-spacing: 2px; }
+        .calculator { background-color: var(--bg-calc); border-radius: 28px; box-shadow: 0 25px 50px -12px var(--shadow-dark); padding: 25px; transition: background-color 0.4s ease; border: 1px solid var(--shadow-light); }
+        #display { width: 100%; height: 80px; font-size: clamp(1.8rem, 10vw, 2.5rem); text-align: right; background-color: var(--display-bg); border: none; color: var(--text-primary); border-radius: 12px; padding: 10px 20px; margin-bottom: 20px; cursor: pointer; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        button { border: none; background-color: var(--btn-bg); color: var(--text-primary); font-size: 1.1rem; height: 60px; border-radius: 16px; cursor: pointer; transition: all 0.2s ease; user-select: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:hover { background-color: var(--btn-hover); transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+        button:active { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-num { font-size: 1.3rem; }
+        .btn-op { color: var(--operator-color); } .btn-fn { color: var(--accent-color); }
+        .btn-eq { background-color: var(--accent-color); color: white; grid-column: span 5; font-weight: bold; }
+        .btn-ac, .btn-del { color: var(--special-color); }
+        .theme-switcher { text-align: center; margin-bottom: 20px; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--btn-bg); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: "🌙"; font-size: 18px; display:flex; justify-content:center; align-items:center; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: #fff; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { content: "☀️"; transform: translateX(26px); }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 15px; }
+        .modal.open .modal-content { animation: modal-open 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+        .modal.closing .modal-content { animation: modal-close 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+        .modal-content { background-color: var(--bg-calc); display: flex; flex-direction: column; border-radius: 20px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--shadow-light); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--btn-bg); }
+        .modal-header h3 { margin: 0; font-weight: 500; color: var(--text-secondary); }
+        .close-button { font-size: 28px; font-weight: bold; cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
+        .close-button:hover { color: var(--special-color); }
+        .modal-body { padding: 0; max-height: 50vh; overflow-y: auto; }
+        .modal-body pre { padding: 25px; font-size: 1.5rem; margin: 0; white-space: pre-wrap; overflow-wrap: break-word; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--btn-bg); }
+        .modal-button { width: 100%; height: auto; padding: 12px; font-size: 1rem; }
+        .copy-button { background-color: var(--accent-color); color: white; }
+        .clear-history-button { background-color: var(--special-color); color: white; }
+        
+        .modal-content.log-base { max-width: 320px; text-align: center; }
+        #history-list { display: flex; flex-direction: column-reverse; }
+        .history-item { padding: 15px 25px; border-bottom: 1px solid var(--btn-bg); cursor: pointer; transition: background-color 0.2s; word-break: break-all; }
+        .history-item:hover { background-color: var(--btn-hover); }
+        .history-item:last-child { border-bottom: none; }
+        .history-item .expr { color: var(--text-secondary); font-size: 0.9em; display: block; }
+        .history-item .result { font-weight: 500; font-size: 1.1em; }
+
+        .modal-input { width: 100%; padding: 12px; font-size: 1.2rem; text-align: center; border-radius: 8px; border: 1px solid var(--btn-bg); background: var(--display-bg); color: var(--text-primary); }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h1 class="title">LECalculator</h1>
+        <div class="theme-switcher"> <label class="switch"> <input type="checkbox" id="theme-toggle"> <span class="slider"></span> </label> </div>
+        <div class="calculator">
+            <input type="text" id="display" placeholder="0" readonly title="Click to expand result">
+            <div class="grid">
+                <button class="btn-fn" onclick="openHistoryModal()">H</button>
+                <button onclick="addToken('(')">(</button>
+                <button onclick="addToken(')')">)</button>
+                <button class="btn-del" onclick="backspace()">⌫</button>
+                <button class="btn-ac" onclick="clearDisplay()">AC</button>
+                
+                <button class="btn-fn" onclick="applyFunction('sin')">sin</button>
+                <button class="btn-num" onclick="addToken('7')">7</button>
+                <button class="btn-num" onclick="addToken('8')">8</button>
+                <button class="btn-num" onclick="addToken('9')">9</button>
+                <button class="btn-op" onclick="addToken('/')">/</button>
+
+                <button class="btn-fn" onclick="applyFunction('cos')">cos</button>
+                <button class="btn-num" onclick="addToken('4')">4</button>
+                <button class="btn-num" onclick="addToken('5')">5</button>
+                <button class="btn-num" onclick="addToken('6')">6</button>
+                <button class="btn-op" onclick="addToken('*')">×</button>
+
+                <button class="btn-fn" onclick="applyFunction('tan')">tan</button>
+                <button class="btn-num" onclick="addToken('1')">1</button>
+                <button class="btn-num" onclick="addToken('2')">2</button>
+                <button class="btn-num" onclick="addToken('3')">3</button>
+                <button class="btn-op" onclick="addToken('-')">-</button>
+
+                <button class="btn-fn" onclick="applyFunction('log10')">log₁₀</button>
+                <button class="btn-fn" onclick="applyFunction('log')">ln</button>
+                <button class="btn-num" onclick="addToken('0')">0</button>
+                <button class="btn-num" onclick="addToken('.')">.</button>
+                <button class="btn-op" onclick="addToken('+')">+</button>
+
+                <button class="btn-fn" onclick="handleCustomLog()">logₓ(y)</button>
+                <button class="btn-fn" onclick="applyFunction('sqrt')">√</button>
+                <button class="btn-fn" onclick="addToken('pi')">π</button>
+                <button class="btn-fn" onclick="addToken('e')">e</button>
+                <button class="btn-op" onclick="addToken('^')">^</button>
+
+                <button class="btn-eq" onclick="calculate()">=</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="zoomModal" class="modal"> <div class="modal-content"> <div class="modal-header"> <h3>Full Result</h3> <span id="zoom-close" class="close-button">&times;</span> </div> <div class="modal-body"> <pre id="modal-text"></pre> </div> <div class="modal-footer"> <button id="copy-button" class="modal-button copy-button">Copy to Clipboard</button> </div> </div> </div>
+    <div id="logBaseModal" class="modal"> <div class="modal-content log-base"> <div class="modal-header"> <h3>Enter Log Base</h3> <span id="log-base-close" class="close-button">&times;</span> </div> <div class="modal-body"> <input type="number" id="logBaseInput" class="modal-input" placeholder="e.g., 2"> <button id="logBaseConfirm" class="modal-button">Confirm</button> </div> </div> </div>
+    <div id="historyModal" class="modal"> <div class="modal-content"> <div class="modal-header"> <h3>History</h3> <span id="history-close" class="close-button">&times;</span> </div> <div class="modal-body" id="history-list"></div> <div class="modal-footer"> <button id="clear-history-button" class="modal-button clear-history-button">Clear History</button> </div> </div> </div>
+
+    <script>
+        const display = document.getElementById('display');
+        let expression = '';
+        let isResult = false;
+        const operators = ['+', '-', '*', '/', '^', '('];
+        const WORKER_URL = 'https://muddy-salad-ae83.lemonzm7.workers.dev/';
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        const zoomModal = document.getElementById('zoomModal');
+        const zoomModalText = document.getElementById('modal-text');
+        const closeZoomModal = document.getElementById('zoom-close');
+        const copyButton = document.getElementById('copy-button');
+        
+        const logBaseModal = document.getElementById('logBaseModal');
+        const logBaseInput = document.getElementById('logBaseInput');
+        const logBaseConfirm = document.getElementById('logBaseConfirm');
+        const logBaseClose = document.getElementById('log-base-close');
+
+        const historyModal = document.getElementById('historyModal');
+        const historyList = document.getElementById('history-list');
+        const closeHistoryModal = document.getElementById('history-close');
+        const clearHistoryButton = document.getElementById('clear-history-button');
+
+        let history = [];
+        const HISTORY_KEY = 'lecalculator-history';
+        
+        function openModal(modalElement) { modalElement.style.display = 'flex'; modalElement.classList.remove('closing'); modalElement.classList.add('open'); }
+        function closeModal(modalElement) { modalElement.classList.add('closing'); modalElement.addEventListener('animationend', () => { modalElement.style.display = 'none'; modalElement.classList.remove('open', 'closing'); }, { once: true }); }
+        
+        display.addEventListener('click', () => { if (display.value && display.value !== '0') { zoomModalText.textContent = display.value; openModal(zoomModal); } });
+        closeZoomModal.addEventListener('click', () => closeModal(zoomModal));
+        copyButton.addEventListener('click', () => { navigator.clipboard.writeText(zoomModalText.textContent).then(() => { copyButton.textContent = 'Copied!'; setTimeout(() => { copyButton.textContent = 'Copy to Clipboard'; }, 2000); }); });
+
+        logBaseConfirm.addEventListener('click', () => { const base = logBaseInput.value; if (!base || isNaN(Number(base))) return; const { prefix, number } = getLastNumber(); expression = `${prefix}log[${base}, ${number}]`; logBaseInput.value = ''; closeModal(logBaseModal); updateDisplay(); });
+        logBaseClose.addEventListener('click', () => closeModal(logBaseModal));
+        
+        themeToggle.addEventListener('change', () => { body.classList.toggle('light-theme'); localStorage.setItem('theme', body.classList.contains('light-theme') ? 'light' : 'dark'); });
+        if (localStorage.getItem('theme') === 'light') { body.classList.add('light-theme'); themeToggle.checked = true; }
+        
+        function updateDisplay() { display.value = expression.replace(/\*/g, '×').replace(/\//g, '÷') || '0'; }
+        function addToken(token) { if (isResult && !operators.includes(token) && token !== '.') { expression = ''; } isResult = false; expression += token; updateDisplay(); }
+        function applyFunction(funcName) { isResult = false; const { prefix, number } = getLastNumber(); if (number === '') { expression += `${funcName}(`; } else { expression = `${prefix}${funcName}(${number})`; } updateDisplay(); }
+        function handleCustomLog() { isResult = false; const { number } = getLastNumber(); if (number === '') { alert("Please enter the number first."); return; } openModal(logBaseModal); }
+        function getLastNumber() {
+            let startIndex = 0;
+            for (let i = expression.length - 1; i >= 0; i--) { if (operators.includes(expression[i]) || expression[i] === ')' || expression[i] === ',') { startIndex = i + 1; break; } }
+            return { prefix: expression.substring(0, startIndex), number: expression.substring(startIndex) };
+        }
+        function clearDisplay() { expression = ''; isResult = false; updateDisplay(); }
+        function backspace() { expression = expression.slice(0, -1); isResult = false; updateDisplay(); }
+
+        function loadHistory() { try { const storedHistory = localStorage.getItem(HISTORY_KEY); if (storedHistory) { history = JSON.parse(storedHistory); } } catch (e) { history = []; } }
+        function saveHistory() { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }
+        function updateHistoryModal() {
+            historyList.innerHTML = '';
+            if (history.length === 0) { historyList.innerHTML = '<div class="history-item"><span class="expr">No history yet.</span></div>'; return; }
+            history.forEach(item => {
+                const [expr, result] = item.split(' = ');
+                const itemEl = document.createElement('div');
+                itemEl.className = 'history-item';
+                itemEl.innerHTML = `<span class="expr">${expr.replace(/\*/g, '×').replace(/\//g, '÷')} =</span><span class="result">${result}</span>`;
+                itemEl.addEventListener('click', () => { expression = result; isResult = true; updateDisplay(); closeModal(historyModal); });
+                historyList.appendChild(itemEl);
+            });
+        }
+        function openHistoryModal() { updateHistoryModal(); openModal(historyModal); }
+        function clearHistory() { history = []; saveHistory(); updateHistoryModal(); }
+        closeHistoryModal.addEventListener('click', () => closeModal(historyModal));
+        clearHistoryButton.addEventListener('click', clearHistory);
+        document.addEventListener('DOMContentLoaded', loadHistory);
+
+        async function calculate() {
+            if (expression === '' || isResult) return;
+            const originalExpression = expression;
+            display.value = 'Calculating...';
+            try {
+                const response = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expression }) });
+                let resultText = await response.text();
+                if (!response.ok) { try { resultText = JSON.parse(resultText).error; } catch(e){} throw new Error(resultText); }
+                const result = resultText.split('\n')[0];
+                expression = result;
+                isResult = true;
+                const historyEntry = `${originalExpression} = ${result}`;
+                history.unshift(historyEntry);
+                if (history.length > 25) { history.pop(); }
+                saveHistory();
+                updateDisplay();
+            } catch (error) { display.value = 'Error'; expression = ''; isResult = true; }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LECOMPUTER - Advanced Programming & Science Tools Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #fff700;
+      --accent: #ffb300;
+      --secondary: #ffecb3;
+      --bg: #fffde7;
+      --card-bg: #ffffffcc;
+      --text: #2d2d2d;
+      --radius: 18px;
+      --shadow: 0 6px 24px #ffe06644;
+      --transition: 0.4s cubic-bezier(.62,-0.07,.42,1.04);
+    }
+    [data-theme='dark'] {
+      --primary: #222;
+      --accent: #ffe066;
+      --secondary: #353535;
+      --bg: #111;
+      --card-bg: #1a1a1acc;
+      --text: #ffe066;
+      --shadow: 0 6px 24px #222a;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', 'Vazir', Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .binary-bg {
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.23;
+      animation: binary-fade 17s linear infinite alternate;
+      background:
+        repeating-linear-gradient(
+          120deg,
+          transparent 0 24px,
+          #ffe06622 25px 26px
+        );
+    }
+    .binary-string {
+      position: absolute;
+      font-size: 2.6em;
+      color: #ffe066;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      opacity: 0.11;
+      pointer-events: none;
+      animation: binary-move 14s linear infinite;
+      left: 2vw;
+      top: 12vh;
+      white-space: pre;
+      user-select: none;
+    }
+    .binary-string.dark {
+      color: #222;
+      opacity: 0.18;
+    }
+    @keyframes binary-fade {
+      0% { opacity: 0.23;}
+      50% { opacity: 0.15;}
+      100% { opacity: 0.23;}
+    }
+    @keyframes binary-move {
+      0% { top: 9vh; left: 2vw;}
+      20% { top: 16vh; left: 10vw;}
+      40% { top: 19vh; left: 2vw;}
+      60% { top: 17vh; left: 16vw;}
+      100% { top: 12vh; left: 2vw;}
+    }
+
+    [data-theme='dark'] .binary-bg {
+      background:
+        repeating-linear-gradient(
+          120deg,
+          transparent 0 24px,
+          #222 25px 26px
+        );
+      opacity: 0.18;
+    }
+    [data-theme='dark'] .binary-string {
+      color: #222;
+      opacity: 0.18;
+    }
+
+    .lecomputer-title {
+      position: relative;
+      z-index: 2;
+      background: linear-gradient(90deg, var(--accent) 10%, var(--primary) 90%);
+      color: #2d2d2d;
+      margin: 0;
+      padding: 42px 0 26px 0;
+      text-align: center;
+      font-size: 3em;
+      font-weight: bold;
+      letter-spacing: .06em;
+      border-radius: 0 0 60px 60px;
+      box-shadow: 0 8px 28px #ffe06666;
+      background-size: 200% 100%;
+      animation: shine-title 2.2s linear infinite alternate;
+      text-shadow: 0 2px 10px #ffecb3ee, 0 0px 30px #ffb30033;
+      user-select: none;
+    }
+    @keyframes shine-title {
+      0% {background-position: 0%;}
+      100% {background-position: 100%;}
+    }
+    .theme-toggle {
+      position: fixed; right: 32px; top: 32px;
+      background: var(--accent);
+      color: #2d2d2d;
+      border: none;
+      border-radius: 50%;
+      width: 52px; height: 52px;
+      font-size: 2em;
+      cursor: pointer;
+      box-shadow: 0 4px 18px #ffecb3cc, 0 2px 8px #ffe06699;
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+      z-index: 10;
+    }
+    .theme-toggle:active {
+      transform: scale(0.94);
+      box-shadow: 0 2px 8px #ffb30099;
+    }
+    .tools-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+      gap: 42px;
+      padding: 54px 36px;
+      max-width: 1700px;
+      margin: auto;
+      position: relative;
+      z-index: 1;
+      animation: fadein 1.2s cubic-bezier(.62,-0.07,.42,1.04);
+    }
+    @keyframes fadein {
+      0% { opacity: 0; transform: translateY(26px);}
+      100% { opacity: 1; transform: translateY(0);}
+    }
+    .tool-box {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px 28px 28px 28px;
+      margin-bottom: 24px;
+      min-width: 340px;
+      max-width: 700px;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow var(--transition), transform var(--transition);
+      outline: 0 solid var(--accent);
+      animation: tool-appear 0.9s cubic-bezier(.62,-0.07,.42,1.04);
+    }
+    @keyframes tool-appear {
+      0% {opacity:0; transform:scale(0.97);}
+      80% {opacity:0.9; transform:scale(1.03);}
+      100% {opacity:1; transform:scale(1);}
+    }
+    .tool-box:hover {
+      box-shadow: 0 12px 36px #ffe066bb;
+      transform: translateY(-3px) scale(1.03);
+      outline: 2px solid var(--accent);
+    }
+    .tool-box h2 {
+      margin-top: 0;
+      color: var(--primary);
+      font-size: 1.38em;
+      letter-spacing: .03em;
+      margin-bottom: 14px;
+      font-weight: bold;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-fill-color: transparent;
+      text-shadow: 0 2px 12px #ffecb3aa;
+    }
+    textarea, input, select {
+      width: 100%;
+      margin-top: 6px;
+      margin-bottom: 17px;
+      padding: 11px;
+      font-size: 1.08em;
+      border-radius: 11px;
+      border: 2px solid var(--accent);
+      background: var(--secondary);
+      color: var(--text);
+      box-sizing: border-box;
+      transition: border var(--transition), background var(--transition), color var(--transition);
+      outline: none;
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary);
+      background: var(--card-bg);
+    }
+    input[type="checkbox"], input[type="radio"] {
+      width: auto; margin-right: 10px;
+      accent-color: var(--accent);
+    }
+    button {
+      background: linear-gradient(90deg, var(--primary) 60%, var(--accent) 100%);
+      color: #2d2d2d;
+      border: none;
+      padding: 10px 26px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.08em;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px #ffb30022;
+      font-weight: bold;
+      transition: background var(--transition), transform 0.2s;
+      letter-spacing: .02em;
+      position: relative;
+      overflow: hidden;
+    }
+    button:active {
+      background: linear-gradient(90deg, var(--accent) 60%, var(--primary) 100%);
+      transform: scale(0.96);
+    }
+    pre, .output {
+      background: var(--secondary);
+      padding: 14px;
+      border-radius: 9px;
+      overflow-x: auto;
+      margin-top: 13px;
+      margin-bottom: 0;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      font-size: 1em;
+      word-break: break-word;
+      white-space: pre-wrap;
+      color: var(--text);
+      letter-spacing: .01em;
+      box-shadow: 0 1px 8px #ffe06633;
+    }
+    [data-theme='dark'] pre, [data-theme='dark'] .output {
+      background: #222;
+      color: #ffe066;
+      box-shadow: 0 1px 8px #222a;
+    }
+    label {
+      font-size: 1.09em;
+      color: var(--accent);
+      margin-bottom: 5px;
+      font-weight: 500;
+      letter-spacing: .01em;
+      display: block;
+    }
+    .row { display: flex; gap: 16px; }
+    .col { flex: 1; }
+    canvas { background: var(--card-bg); border-radius: 10px; margin-top: 10px; box-shadow: 0 1px 8px #ffe06633;}
+    .options { font-size: 1em; color: #888; margin-bottom: 10px; font-weight: 500;}
+    .section { margin-top: 12px; margin-bottom: 17px; }
+    .small { font-size: 0.97em; color: #bbb; }
+    .logic-diagram { display: flex; gap: 18px; margin-top: 10px;}
+    .logic-gate { font-size: 1.22em; font-weight: bold; background: #fff70044; padding: 5px 16px; border-radius: 6px;}
+    .hidden { display: none; }
+    .success { color: #54b800; font-weight: bold;}
+    .error { color: #e74c3c; font-weight: bold;}
+    @media (max-width: 900px) {
+      .tools-container { grid-template-columns: 1fr; padding: 36px 2vw;}
+      .tool-box { max-width: 98vw;}
+      .lecomputer-title {font-size: 2.1em;}
+      .theme-toggle {right: 10px; top: 10px;}
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggleBtn" title="Toggle theme">🍋</button>
+  <h1 class="lecomputer-title">LECOMPUTER</h1>
+  <div class="tools-container">
+
+    <div class="tool-box">
+      <h2>Advanced Calculator (Matrices, Vectors, Expressions)</h2>
+      <div class="options">Supports: arithmetic, vectors (<code>[1,2]+[3,4]</code>), matrices (<code>det([[1,2],[3,4]])</code>), functions (<code>sin(pi/2)</code>), fractions, etc.</div>
+      <label for="mathInput">Expression:</label>
+      <textarea id="mathInput" rows="2" placeholder="E.g. [1,2,3] + [3,4,5] OR det([[1,2],[3,4]]) OR 2^8"></textarea>
+      <button onclick="calcMath()">Calculate</button>
+      <pre id="mathResult" class="output">// Result will appear here</pre>
+      <div class="section">
+        <label for="matrixInput">Matrix Operations:</label>
+        <textarea id="matrixInput" rows="2" placeholder='E.g. [[1,2],[3,4]]'></textarea>
+        <select id="matrixOperation">
+          <option value="transpose">Transpose</option>
+          <option value="inverse">Inverse</option>
+          <option value="determinant">Determinant</option>
+          <option value="eigenvalues">Eigenvalues</option>
+        </select>
+        <button onclick="matrixOps()">Run</button>
+        <pre id="matrixResult" class="output"></pre>
+      </div>
+      <div class="section">
+        <label for="vectorInput">Vector Operations:</label>
+        <textarea id="vectorInput" rows="1" placeholder='E.g. [1,2,3]'></textarea>
+        <select id="vectorOperation">
+          <option value="norm">Norm</option>
+          <option value="sum">Sum</option>
+          <option value="dot">Dot Product (with [4,5,6])</option>
+        </select>
+        <button onclick="vectorOps()">Run</button>
+        <pre id="vectorResult" class="output"></pre>
+      </div>
+    </div>
+
+    <div class="tool-box">
+      <h2>Secure Password Generator</h2>
+      <div class="options">Custom length, character sets, pronounceable, exclude ambiguous symbols.</div>
+      <label for="passLen">Length:</label>
+      <input type="number" id="passLen" min="8" max="64" value="16">
+      <label><input type="checkbox" id="passSymbols" checked> Symbols (@#$%)</label>
+      <label><input type="checkbox" id="passNumbers" checked> Numbers (0-9)</label>
+      <label><input type="checkbox" id="passUpper" checked> Uppercase (A-Z)</label>
+      <label><input type="checkbox" id="passLower" checked> Lowercase (a-z)</label>
+      <label><input type="checkbox" id="passAvoidAmbiguous"> Avoid ambiguous characters (lI1O0)</label>
+      <label><input type="checkbox" id="passPronounceable"> Pronounceable (for easier recall)</label>
+      <button onclick="generatePassword()">Generate</button>
+      <pre id="passResult" class="output">// Your secure password</pre>
+    </div>
+
+    <div class="tool-box">
+      <h2>Test Data Generator</h2>
+      <div class="options">Generate random numbers, strings, matrices, arrays, JSON objects, custom regex, etc.</div>
+      <label for="testDataType">Type:</label>
+      <select id="testDataType">
+        <option value="number">Random Numbers</option>
+        <option value="string">Random Strings</option>
+        <option value="matrix">Random Matrix</option>
+        <option value="array">Random Array</option>
+        <option value="json">Random JSON Object</option>
+        <option value="regex">Custom Regex</option>
+      </select>
+      <label for="testDataCount">Count/Dimensions:</label>
+      <input type="text" id="testDataCount" value="10" placeholder="For matrix: 3x3, for array: 5">
+      <label for="testDataRegex" id="testDataRegexLabel" class="hidden">Regex Pattern:</label>
+      <input type="text" id="testDataRegex" class="hidden" placeholder="E.g. [A-Z]{2}[0-9]{3}">
+      <button onclick="generateTestData()">Generate</button>
+      <pre id="testDataResult" class="output">// Generated test data</pre>
+    </div>
+
+    <div class="tool-box">
+      <h2>Charts & Graphs (Histogram, Pie, Scatter, Line)</h2>
+      <div class="options">Visualize your data with multiple chart types, colors & labels.</div>
+      <label for="chartType">Chart Type:</label>
+      <select id="chartType">
+        <option value="bar">Bar/Histogram</option>
+        <option value="pie">Pie</option>
+        <option value="scatter">Scatter</option>
+        <option value="line">Line</option>
+        <option value="doughnut">Doughnut</option>
+        <option value="radar">Radar</option>
+      </select>
+      <label for="chartLabels">Labels (comma separated):</label>
+      <input type="text" id="chartLabels" value="A,B,C,D,E">
+      <label for="chartData">Values (comma separated):</label>
+      <input type="text" id="chartData" value="1,4,9,7,3">
+      <button onclick="drawChart()">Draw Chart</button>
+      <canvas id="myChart" width="350" height="180"></canvas>
+    </div>
+
+    <div class="tool-box">
+      <h2>Unit Converter & Memory/Speed Calculator</h2>
+      <div class="options">Supports: memory, speed, length, time, weight, temperature, currency, custom units.</div>
+      <label for="unitType">Unit Type:</label>
+      <select id="unitType">
+        <option value="memory">Memory</option>
+        <option value="speed">Speed</option>
+        <option value="length">Length</option>
+        <option value="time">Time</option>
+        <option value="weight">Weight</option>
+        <option value="temperature">Temperature</option>
+      </select>
+      <label for="unitInput">Conversion Expression (e.g. 1024 KB to MB OR TB) guide: memory: { "B","KB","MB","GB","TB"}
+length: {"mm","cm","dm","m","km","in","ft","yd","mi"}
+time: { "ms","s","min","h","day"}
+speed: {"m/s","km/h","mph"}
+weight: {"mg","g","kg","t","lb","oz"}
+temperature: { "C","F","K" } :</label>
+      <input type="text" id="unitInput" placeholder="Example: 1024 KB to MB">
+      <button onclick="convertUnit()">Convert</button>
+      <pre id="unitResult" class="output">// Converted value</pre>
+    </div>
+
+    <div class="tool-box">
+      <h2>Coding Interview Practice</h2>
+      <div class="options">Randomized questions & answers, categorized by difficulty, option to show/hide answer.</div>
+      <label for="interviewLevel">Difficulty:</label>
+      <select id="interviewLevel">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button onclick="showInterviewQ()">Show Question</button>
+      <button onclick="showInterviewA()">Show Answer</button>
+      <pre id="interviewResult" class="output">// Interview question</pre>
+      <pre id="interviewAnswer" class="output hidden">// Answer</pre>
+    </div>
+
+    <div class="tool-box">
+      <h2>Automatic Text Summarizer</h2>
+      <div class="options">Summarize by number of sentences, or by extracting main points (basic algorithms).</div>
+      <label for="summaryInput">Text:</label>
+      <textarea id="summaryInput" rows="6"></textarea>
+      <label for="summaryCount">Number of Sentences:</label>
+      <input type="number" id="summaryCount" value="2" min="1" max="20">
+      <label for="summaryAlg">Algorithm:</label>
+      <select id="summaryAlg">
+        <option value="first">First Sentences</option>
+        <option value="score">Main Points (Keyword Based)</option>
+      </select>
+      <button onclick="summarizeText()">Summarize</button>
+      <pre id="summaryResult" class="output">// Summary</pre>
+    </div>
+
+    <div class="tool-box">
+      <h2>Reference & Citation Generator</h2>
+      <div class="options">APA, MLA, IEEE, Chicago; multiple authors, URL, DOI, edition, etc.</div>
+      <label for="refFormat">Format:</label>
+      <select id="refFormat">
+        <option value="APA">APA</option>
+        <option value="MLA">MLA</option>
+        <option value="IEEE">IEEE</option>
+        <option value="Chicago">Chicago</option>
+      </select>
+      <label for="refAuthors">Authors (comma separated):</label>
+      <input type="text" id="refAuthors" placeholder="E.g. John Smith, Alex Doe">
+      <label for="refTitle">Title:</label>
+      <input type="text" id="refTitle" placeholder="E.g. Introduction to Algorithms">
+      <label for="refYear">Year:</label>
+      <input type="number" id="refYear" placeholder="E.g. 2023">
+      <label for="refSource">Source (journal, publisher, conference):</label>
+      <input type="text" id="refSource" placeholder="E.g. MIT Press">
+      <label for="refURL">URL/DOI:</label>
+      <input type="text" id="refURL" placeholder="E.g. https://mitpress.mit.edu/algorithms">
+      <label for="refEdition">Edition (optional):</label>
+      <input type="text" id="refEdition" placeholder="E.g. 3rd Edition">
+      <button onclick="generateRef()">Generate Reference</button>
+      <pre id="refResult" class="output">// Ready citation</pre>
+    </div>
+
+    <div class="tool-box">
+      <h2>Digital Circuit Simulator (Logic Gates)</h2>
+      <div class="options">Simulate AND, OR, NOT, NAND, NOR, XOR, XNOR gates, visualize logic diagram.</div>
+      <label for="circuitGate">Gate Type:</label>
+      <select id="circuitGate">
+        <option value="AND">AND</option>
+        <option value="OR">OR</option>
+        <option value="NOT">NOT</option>
+        <option value="NAND">NAND</option>
+        <option value="NOR">NOR</option>
+        <option value="XOR">XOR</option>
+        <option value="XNOR">XNOR</option>
+      </select>
+      <label for="circuitInput">Inputs (comma separated, e.g. 1,0):</label>
+      <input type="text" id="circuitInput" placeholder="For NOT only one value">
+      <button onclick="simulateCircuit()">Simulate</button>
+      <pre id="circuitResult" class="output">// Logic result</pre>
+      <div id="circuitDiagram" class="logic-diagram"></div>
+    </div>
+
+  </div>
+  <script>
+    document.getElementById('themeToggleBtn').onclick = function() {
+      if(document.body.getAttribute('data-theme')==='dark') {
+        document.body.removeAttribute('data-theme');
+        this.textContent='🍋';
+        document.getElementById('binaryString').classList.remove('dark');
+      } else {
+        document.body.setAttribute('data-theme','dark');
+        this.textContent='🌙';
+        document.getElementById('binaryString').classList.add('dark');
+      }
+    };
+  </script>
+  <script>
+    function calcMath() {
+      let expr = document.getElementById('mathInput').value;
+      try {
+        let result = math.evaluate(expr);
+        document.getElementById('mathResult').textContent = result.toString();
+      } catch(e) {
+        document.getElementById('mathResult').textContent = "Error: " + e.message;
+      }
+    }
+    function matrixOps() {
+      let input = document.getElementById('matrixInput').value;
+      let op = document.getElementById('matrixOperation').value;
+      try {
+        let mat = math.evaluate(input);
+        let result = '';
+        switch(op) {
+          case 'transpose':
+            result = JSON.stringify(math.transpose(mat));
+            break;
+          case 'inverse':
+            result = JSON.stringify(math.inv(mat));
+            break;
+          case 'determinant':
+            result = math.det(mat).toString();
+            break;
+          case 'eigenvalues':
+            result = JSON.stringify(math.eigs(mat).values);
+            break;
+        }
+        document.getElementById('matrixResult').textContent = result;
+      } catch(e) {
+        document.getElementById('matrixResult').textContent = "Error: " + e.message;
+      }
+    }
+    function vectorOps() {
+      let input = document.getElementById('vectorInput').value;
+      let op = document.getElementById('vectorOperation').value;
+      try {
+        let vec = math.evaluate(input);
+        let result = '';
+        switch(op) {
+          case 'norm':
+            result = math.norm(vec).toString();
+            break;
+          case 'sum':
+            result = math.sum(vec).toString();
+            break;
+          case 'dot':
+            result = math.dot(vec, [4,5,6]).toString();
+            break;
+        }
+        document.getElementById('vectorResult').textContent = result;
+      } catch(e) {
+        document.getElementById('vectorResult').textContent = "Error: " + e.message;
+      }
+    }
+    function generatePassword() {
+      let len = parseInt(document.getElementById('passLen').value);
+      let useSymbols = document.getElementById('passSymbols').checked;
+      let useNumbers = document.getElementById('passNumbers').checked;
+      let useUpper = document.getElementById('passUpper').checked;
+      let useLower = document.getElementById('passLower').checked;
+      let avoidAmbiguous = document.getElementById('passAvoidAmbiguous').checked;
+      let pronounceable = document.getElementById('passPronounceable').checked;
+      let chars = '';
+      if(useLower) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if(useUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if(useNumbers) chars += '0123456789';
+      if(useSymbols) chars += '!@#$%^&*()-_=+[]{}|;:,.<>?/~';
+      if(avoidAmbiguous) chars = chars.replace(/[lI1O0]/g,'');
+      if(!chars) {
+        document.getElementById('passResult').textContent = "Error: Please select at least one character set.";
+        return;
+      }
+      let pass = '';
+      if(pronounceable) {
+        let vowels = 'aeiou';
+        let consonants = 'bcdfghjklmnpqrstvwxyz';
+        if(useUpper) { vowels += vowels.toUpperCase(); consonants += consonants.toUpperCase(); }
+        if(avoidAmbiguous) {
+          vowels = vowels.replace(/[lI1O0]/g,'');
+          consonants = consonants.replace(/[lI1O0]/g,'');
+        }
+        for(let i=0;i<len;i++) {
+          pass += (i%2===0) ? consonants[Math.floor(Math.random()*consonants.length)] : vowels[Math.floor(Math.random()*vowels.length)];
+        }
+      } else {
+        for(let i=0;i<len;i++)
+          pass += chars[Math.floor(Math.random()*chars.length)];
+      }
+      document.getElementById('passResult').textContent = pass;
+    }
+    document.getElementById('testDataType').onchange = function() {
+      let isRegex = this.value==='regex';
+      document.getElementById('testDataRegex').classList.toggle('hidden',!isRegex);
+      document.getElementById('testDataRegexLabel').classList.toggle('hidden',!isRegex);
+    };
+    function randomString(length) {
+      let chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let res = '';
+      for(let i=0;i<length;i++) res += chars[Math.floor(Math.random()*chars.length)];
+      return res;
+    }
+    function generateTestData() {
+      let type = document.getElementById('testDataType').value;
+      let count = document.getElementById('testDataCount').value;
+      let regex = document.getElementById('testDataRegex').value;
+      let res = '';
+      if(type==="number") {
+        let n = parseInt(count)||10;
+        let arr = [];
+        for(let i=0;i<n;i++)
+          arr.push(Math.floor(Math.random()*10000));
+        res = arr.join(', ');
+      } else if(type==="string") {
+        let n = parseInt(count)||10;
+        let arr = [];
+        for(let i=0;i<n;i++)
+          arr.push(randomString(8));
+        res = arr.join(', ');
+      } else if(type==="matrix") {
+        let dims = count.split('x');
+        let row = parseInt(dims[0])||2, col = parseInt(dims[1])||2;
+        let mat = [];
+        for(let i=0;i<row;i++) {
+          let r = [];
+          for(let j=0;j<col;j++)
+            r.push(Math.floor(Math.random()*100));
+          mat.push(r);
+        }
+        res = JSON.stringify(mat);
+      } else if(type==="array") {
+        let n = parseInt(count)||8;
+        let arr = [];
+        for(let i=0;i<n;i++)
+          arr.push(randomString(6));
+        res = JSON.stringify(arr);
+      } else if(type==="json") {
+        let n = parseInt(count)||4;
+        let obj = {};
+        for(let i=0;i<n;i++)
+          obj['key'+(i+1)] = randomString(5);
+        res = JSON.stringify(obj, null, 2);
+      } else if(type==="regex") {
+        if(!regex) {
+          res = "Error: Please enter a regex pattern.";
+        } else {
+          try {
+            let arr = [];
+            for(let i=0;i<10;i++) {
+              arr.push(randexp(regex));
+            }
+            res = arr.join(', ');
+          } catch(e) {
+            res = "Error: Invalid regex pattern.";
+          }
+        }
+      }
+      document.getElementById('testDataResult').textContent = res;
+    }
+    function randexp(pattern) {
+      let m = pattern.match(/\[A-Z\]{(\d+)}/);
+      if(m) return Array.from({length:+m[1]},()=>String.fromCharCode(65+Math.floor(Math.random()*26))).join('');
+      m = pattern.match(/\[a-z\]{(\d+)}/);
+      if(m) return Array.from({length:+m[1]},()=>String.fromCharCode(97+Math.floor(Math.random()*26))).join('');
+      m = pattern.match(/\[0-9\]{(\d+)}/);
+      if(m) return Array.from({length:+m[1]},()=>String.fromCharCode(48+Math.floor(Math.random()*10))).join('');
+      return randomString(8);
+    }
+    let chart;
+    function drawChart() {
+      let type = document.getElementById('chartType').value;
+      let labels = document.getElementById('chartLabels').value.split(',').map(d=>d.trim());
+      let data = document.getElementById('chartData').value.split(',').map(d=>parseFloat(d.trim()));
+      let ctx = document.getElementById('myChart').getContext('2d');
+      if(chart) chart.destroy();
+      let config = {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Data',
+            data: type==='scatter'?data.map((y,i)=>({x:i,y:y})):data,
+            backgroundColor: [
+              '#ffe066','#ffb300','#ffd600','#ffecb3','#fff700','#fffde7','#ffe066','#ffb300'
+            ],
+            borderColor: [
+              '#fff700','#ffb300','#ffd600','#ffe066','#ffecb3','#ffd600'
+            ],
+            fill: type==='line'?false:true
+          }]
+        },
+        options: { responsive: false }
+      };
+      chart = new Chart(ctx, config);
+    }
+    function convertUnit() {
+      let type = document.getElementById('unitType').value;
+      let input = document.getElementById('unitInput').value;
+      let units = {
+        memory: { "B":1, "KB":1024, "MB":1024*1024, "GB":1024*1024*1024, "TB":1024*1024*1024*1024 },
+        length: { "mm":0.001, "cm":0.01, "dm":0.1, "m":1, "km":1000, "in":0.0254, "ft":0.3048, "yd":0.9144, "mi":1609.34 },
+        time: { "ms":0.001, "s":1, "min":60, "h":3600, "day":86400 },
+        speed: { "m/s":1, "km/h":0.2777778, "mph":0.44704 },
+        weight: { "mg":0.000001, "g":0.001, "kg":1, "t":1000, "lb":0.453592, "oz":0.0283495 },
+        temperature: { "C":1, "F":1, "K":1 }
+      };
+      let regex = /([\d.]+)\s*(\w+)\s*to\s*(\w+)/i;
+      let match = input.match(regex);
+      if(!match) {
+        document.getElementById('unitResult').textContent = "Error: Format is incorrect (e.g. 1024 KB to MB)";
+        return;
+      }
+      let val = parseFloat(match[1]), from = match[2], to = match[3];
+      let u = units[type];
+      if(!u[from] || !u[to]) {
+        document.getElementById('unitResult').textContent = "Error: Unit not supported.";
+        return;
+      }
+      let result;
+      if(type==='temperature') {
+        if(from==='C' && to==='F') result = (val*9/5)+32;
+        else if(from==='F' && to==='C') result = (val-32)*5/9;
+        else if(from==='C' && to==='K') result = val+273.15;
+        else if(from==='K' && to==='C') result = val-273.15;
+        else if(from==='F' && to==='K') result = (val-32)*5/9+273.15;
+        else if(from==='K' && to==='F') result = (val-273.15)*9/5+32;
+        else result = val;
+      } else {
+        result = val*u[from]/u[to];
+      }
+      document.getElementById('unitResult').textContent = result + " " + to;
+    }
+    const interviewQs = {
+      easy: [
+        { q:"Write a function to sum two numbers.", a:"function sum(a,b){ return a+b; }" },
+        { q:"Print the reverse of a string.", a:"console.log(str.split('').reverse().join(''));" },
+        { q:"Find the largest number in an array.", a:"Math.max(...arr);" }
+      ],
+      medium: [
+        { q:"Print all prime numbers up to 100.", a:"for(let i=2;i<100;i++){let p=true;for(let j=2;j<i;j++){if(i%j==0)p=false;}if(p)console.log(i);}" },
+        { q:"Check if a string is a palindrome.", a:"str===str.split('').reverse().join('')" },
+        { q:"Implement bubble sort.", a:"for(let i=0;i<arr.length;i++){for(let j=0;j<arr.length-i-1;j++){if(arr[j]>arr[j+1]){[arr[j],arr[j+1]]=[arr[j+1],arr[j];}}}" }
+      ],
+      hard: [
+        { q:"Implement BFS on a graph.", a:"See: https://en.wikipedia.org/wiki/Breadth-first_search" },
+        { q:"Print all subsets of an array.", a:"function subsets(arr){let res=[[]];for(let el of arr){res=res.concat(res.map(r=>r.concat(el)));}return res;}" },
+        { q:"Compute the inverse of a matrix.", a:"Use math.inv(matrix) in math.js" }
+      ]
+    };
+    let lastQ = null;
+    function showInterviewQ() {
+      let level = document.getElementById('interviewLevel').value;
+      let list = interviewQs[level];
+      let idx = Math.floor(Math.random()*list.length);
+      lastQ = list[idx];
+      document.getElementById('interviewResult').textContent = lastQ.q;
+      document.getElementById('interviewAnswer').textContent = "// Answer";
+      document.getElementById('interviewAnswer').classList.add('hidden');
+    }
+    function showInterviewA() {
+      if(lastQ)
+        document.getElementById('interviewAnswer').textContent = lastQ.a, document.getElementById('interviewAnswer').classList.remove('hidden');
+      else
+        document.getElementById('interviewAnswer').textContent = "No question selected.", document.getElementById('interviewAnswer').classList.remove('hidden');
+    }
+    function summarizeText() {
+      let txt = document.getElementById('summaryInput').value;
+      let num = parseInt(document.getElementById('summaryCount').value)||2;
+      let alg = document.getElementById('summaryAlg').value;
+      let sentences = txt.match(/[^\.!\?]+[\.!\?]+/g) || [txt];
+      let sum = '';
+      if(alg==='first') {
+        sum = sentences.slice(0,num).join(' ');
+      } else if(alg==='score') {
+        let keywords = {};
+        txt.replace(/\b\w{4,}\b/g,function(w){
+          keywords[w]= (keywords[w]||0)+1;
+        });
+        let scored = sentences.map(s=>{
+          let score=0;
+          for(let k in keywords) if(s.includes(k)) score+=keywords[k];
+          return {s,score};
+        });
+        scored.sort((a,b)=>b.score-a.score);
+        sum = scored.slice(0,num).map(x=>x.s).join(' ');
+      }
+      document.getElementById('summaryResult').textContent = sum;
+    }
+    function generateRef() {
+      let fmt = document.getElementById('refFormat').value;
+      let authors = document.getElementById('refAuthors').value.split(',').map(x=>x.trim()).join(', ');
+      let title = document.getElementById('refTitle').value;
+      let year = document.getElementById('refYear').value;
+      let src = document.getElementById('refSource').value;
+      let url = document.getElementById('refURL').value;
+      let edition = document.getElementById('refEdition').value;
+      let ref = "";
+      if(fmt==="APA")
+        ref = `${authors} (${year}). ${title}${edition?'. '+edition:''}. ${src}${url?'. '+url:''}.`;
+      else if(fmt==="MLA")
+        ref = `${authors}. "${title}${edition?'. '+edition:''}." ${src}, ${year}${url?'. '+url:''}.`;
+      else if(fmt==="IEEE")
+        ref = `${authors}, "${title}${edition?'. '+edition:''}", ${src}, ${year}${url?'. '+url:''}.`;
+      else if(fmt==="Chicago")
+        ref = `${authors}. ${title}${edition?'. '+edition:''}. ${src}, ${year}${url?'. '+url:''}.`;
+      document.getElementById('refResult').textContent = ref;
+    }
+    function simulateCircuit() {
+      let gate = document.getElementById('circuitGate').value;
+      let vals = document.getElementById('circuitInput').value.split(',').map(v=>parseInt(v.trim()));
+      let result;
+      switch(gate) {
+        case "AND": result = vals.reduce((a,b)=>a&b,1); break;
+        case "OR": result = vals.reduce((a,b)=>a|b,0); break;
+        case "NOT": result = vals.length>0?1-vals[0]:'Invalid input'; break;
+        case "NAND": result = 1-(vals.reduce((a,b)=>a&b,1)); break;
+        case "NOR": result = 1-(vals.reduce((a,b)=>a|b,0)); break;
+        case "XOR": result = vals.reduce((a,b)=>a^b,0); break;
+        case "XNOR": result = 1-(vals.reduce((a,b)=>a^b,0)); break;
+        default: result = "Unknown gate";
+      }
+      document.getElementById('circuitResult').textContent = result;
+      renderLogicDiagram(gate,vals,result);
+    }
+    function renderLogicDiagram(gate,vals,result) {
+      let diagram = document.getElementById('circuitDiagram');
+      diagram.innerHTML = '';
+      let gatesym = {
+        AND: '⋀', OR: '⋁', NOT: '¬', NAND: '⊼', NOR: '⊽', XOR: '⊕', XNOR: '⊙'
+      };
+      let html = `<span class="logic-gate">${gate} ${gatesym[gate]||''}</span>`;
+      html += vals.map(v=>`<span>${v}</span>`).join(' <b>→</b> ');
+      html += ` <b>=</b> <span class="success">${result}</span>`;
+      diagram.innerHTML = html;
+    }
+  </script>
+</body>
+
+</html>
+

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LECOMPUTER - Online Code Runner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="https://lecomputer.com/favicon.ico">
+  <style>
+    body { background: linear-gradient(135deg,#fffde7 0%,#fff700 100%); font-family: 'Segoe UI',Tahoma,Arial,sans-serif; color:#222; margin:0; min-height:100vh;}
+    .container { max-width: 650px; margin: auto; padding: 34px 8px; }
+    h1 { text-align:center; font-size:2.4em; font-weight:bold; letter-spacing:0.02em; color:#ffb300; margin-bottom:8px; margin-top:0; text-shadow: 0 2px 12px #ffe06666;}
+    .desc { text-align:center; color:#666; margin-bottom:22px;}
+    .form-box { background:#fff; border-radius:18px; box-shadow:0 2px 24px #ffe06644; padding:28px 18px; margin-bottom:30px;}
+    label { color:#ffb300; font-size:1.09em; font-weight:500; display:block; margin-bottom:6px; }
+    select, textarea, input[type="text"], input[type="number"] { width:100%; font-size:1.08em; border-radius:11px; border:2px solid #ffe066; background:#ffecb3; color:#222; padding:10px; margin-bottom:16px; box-sizing:border-box;}
+    textarea { min-height:140px; font-family: 'Fira Mono',Consolas,monospace;}
+    button { background: linear-gradient(90deg,#fff700 60%,#ffb300 100%); color:#222; border:none; border-radius:10px; padding:10px 34px; font-size:1.09em; font-weight:bold; cursor:pointer; box-shadow:0 2px 12px #ffb30022; letter-spacing:0.02em; margin-top:8px; transition: background 0.2s;}
+    button:active { background: linear-gradient(90deg,#ffb300 60%,#fff700 100%);}
+    .output-box { background:#ffecb3; border-radius:13px; box-shadow:0 2px 12px #ffe06644; margin-top:22px; padding:18px 14px;}
+    .output-label { color:#ffb300; font-weight:bold; margin-bottom:5px; font-size:1.07em;}
+    .stdout, .stderr { font-family:'Fira Mono',Consolas,monospace; font-size:1em; white-space:pre-wrap; margin:0 0 12px 0; }
+    .stderr { color:#e74c3c;}
+    .row { display: flex; gap: 12px; }
+    .col { flex: 1; }
+    .settings-bar { background:#fffde7; border-radius:10px; padding:10px 18px; margin-bottom:18px; box-shadow:0 1px 8px #ffe06622; display:flex; flex-wrap:wrap; align-items:center; gap:16px;}
+    .settings-bar label { margin-bottom:0; font-size:0.97em;}
+    .settings-bar select, .settings-bar input[type="number"] { width:auto; min-width:80px; margin-bottom:0;}
+    .copy-btn { background:#ffb300; color:#222; border:none; border-radius:8px; padding:5px 18px; font-size:1em; font-weight:bold; cursor:pointer; box-shadow:0 1px 6px #ffe06644; margin-left:10px;}
+    .copy-btn:active { background:#ffe066;}
+    .loader { display:none; margin:16px auto; border:6px solid #ffecb3; border-top:6px solid #ffb300; border-radius:50%; width:38px; height:38px; animation: spin 1.1s linear infinite;}
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    .error { color:#e74c3c; font-weight:bold; margin-bottom:10px;}
+    @media (max-width: 700px) {
+      .container { padding:18px 2vw;}
+      .form-box { padding:16px 5px;}
+      h1 { font-size:1.5em;}
+      .output-box { padding:9px 4px; }
+      button { font-size:1em; padding:8px 14px;}
+      textarea { min-height:90px;}
+      .settings-bar { padding:8px 5px; gap:9px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LECOMPUTER Online Code Runner</h1>
+    <div class="desc">Run code in Python, JavaScript, C++, Java, and more - safely and instantly! new version:https://0xlemonz.xyz/lemonztools/LEComputercode.html </div>
+    <div class="form-box">
+      <div class="settings-bar">
+        <label for="language">Language:</label>
+        <select id="language">
+          <option value="python">Python</option>
+          <option value="javascript">JavaScript</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="php">PHP</option>
+          <option value="ruby">Ruby</option>
+          <option value="go">Go</option>
+          <option value="swift">Swift</option>
+          <option value="rust">Rust</option>
+          <option value="kotlin">Kotlin</option>
+          <option value="typescript">TypeScript</option>
+          <option value="perl">Perl</option>
+          <option value="r">R</option>
+        </select>
+        <label for="timeout">Timeout (sec):</label>
+        <input type="number" id="timeout" min="1" max="10" value="3">
+        <button class="copy-btn" id="copyCodeBtn" type="button">Copy Code</button>
+      </div>
+      <form id="runForm" autocomplete="off">
+        <label for="code">Your Code:</label>
+        <textarea id="code" placeholder="print('Hello LECOMPUTER!')"></textarea>
+        <label for="stdin">Standard Input (optional):</label>
+        <input type="text" id="stdin" placeholder="Input for your program (optional)">
+        <button type="submit">Run Code 🚀</button>
+      </form>
+      <div class="loader" id="loader"></div>
+      <div class="error" id="errorBox" style="display:none;"></div>
+    </div>
+    <div class="output-box" id="outputBox" style="display:none;">
+      <div class="output-label">Output:</div>
+      <pre class="stdout" id="outputStdout"></pre>
+      <pre class="stderr" id="outputStderr"></pre>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById('runForm');
+    const languageSel = document.getElementById('language');
+    const timeoutInput = document.getElementById('timeout');
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+    const outputBox = document.getElementById('outputBox');
+    const loader = document.getElementById('loader');
+    const errorBox = document.getElementById('errorBox');
+    const codeField = document.getElementById('code');
+    const examples = {
+      python: "print('Hello LECOMPUTER!')\nfor i in range(1, 4):\n    print(f'Number:', i)",
+      javascript: "console.log('Hello LECOMPUTER!');\nfor(let i=1;i<=3;i++){\n  console.log('Number:',i);\n}",
+      java: "public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello LECOMPUTER!\");\n    for(int i=1;i<=3;i++){\n      System.out.println(\"Number: \" + i);\n    }\n  }\n}",
+      cpp: "#include <iostream>\nusing namespace std;\nint main() {\n  cout << \"Hello LECOMPUTER!\" << endl;\n  for(int i=1;i<=3;i++)\n    cout << \"Number: \" << i << endl;\n  return 0;\n}",
+      c: "#include <stdio.h>\nint main() {\n  printf(\"Hello LECOMPUTER!\\n\");\n  for(int i=1;i<=3;i++) printf(\"Number: %d\\n\",i);\n  return 0;\n}",
+      php: "<?php\necho \"Hello LECOMPUTER!\\n\";\nfor($i=1;$i<=3;$i++){\n  echo \"Number: $i\\n\";\n}\n?>",
+      ruby: "puts 'Hello LECOMPUTER!'\n(1..3).each {|i| puts \"Number: #{i}\" }",
+      go: "package main\nimport \"fmt\"\nfunc main() {\n  fmt.Println(\"Hello LECOMPUTER!\")\n  for i:=1;i<=3;i++ {\n    fmt.Println(\"Number:\",i)\n  }\n}",
+      swift: "for i in 1...3 {\n  print(\"Number:\", i)\n}\nprint(\"Hello LECOMPUTER!\")",
+      rust: "fn main() {\n  println!(\"Hello LECOMPUTER!\");\n  for i in 1..=3 {\n    println!(\"Number: {}\", i);\n  }\n}",
+      kotlin: "fun main() {\n  println(\"Hello LECOMPUTER!\")\n  for(i in 1..3) println(\"Number: $i\")\n}",
+      typescript: "for(let i=1;i<=3;i++){\n  console.log('Number:',i);\n}\nconsole.log('Hello LECOMPUTER!');",
+      perl: "print \"Hello LECOMPUTER!\\n\";\nfor my $i (1..3) {\n  print \"Number: $i\\n\";\n}",
+      r: "cat('Hello LECOMPUTER!\\n')\nfor(i in 1:3) cat('Number:',i,'\\n')"
+    };
+    languageSel.onchange = function() {
+      const lang = languageSel.value;
+      codeField.value = examples[lang] || "";
+    };
+    copyCodeBtn.onclick = function() {
+      codeField.select();
+      document.execCommand('copy');
+      copyCodeBtn.textContent = "Copied!";
+      setTimeout(()=>copyCodeBtn.textContent = "Copy Code", 1300);
+    };
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      outputBox.style.display = 'none';
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+      loader.style.display = 'block';
+      document.getElementById('outputStdout').textContent = '';
+      document.getElementById('outputStderr').textContent = '';
+      const language = languageSel.value;
+      const code = codeField.value;
+      const stdin = document.getElementById('stdin').value;
+      const timeout = parseInt(timeoutInput.value) || 3;
+      const workerUrl = "https://dry-thunder-fca2.lemonzm7.workers.dev/";
+      try {
+        const res = await fetch(workerUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ language, code, stdin, run_timeout: timeout * 1000 })
+        });
+        loader.style.display = 'none';
+        if (!res.ok) throw new Error("API Error: " + res.status);
+        const result = await res.json();
+        let out = "";
+        let err = "";
+        if (result.run) {
+          out = result.run.output || result.run.stdout || "";
+          err = result.run.stderr || "";
+        } else if (result.output) {
+          out = result.output;
+        }
+        document.getElementById('outputStdout').textContent = out;
+        document.getElementById('outputStderr').textContent = err ? "Error:\n" + err : "";
+        outputBox.style.display = 'block';
+      } catch (ex) {
+        loader.style.display = 'none';
+        errorBox.textContent = "Error connecting to code runner API.";
+        errorBox.style.display = 'block';
+      }
+    });
+    window.onload = function() {
+      codeField.value = examples[languageSel.value];
+    };
+  </script>
+</body>
+
+</html>

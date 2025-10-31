@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fetch Contract Mint Functions with lE</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/NDw7bQY.png">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    :root {
+      --lemon-main: #f9f871;
+      --lemon-dark: #e4e826;
+      --lemon-green: #b9d44a;
+      --lemon-bg: #fffde7;
+      --lemon-bg2: #ffe082;
+      --lemon-border: #e9ef83;
+      --lemon-shadow: 0 6px 44px 0 #f9f87144, 0 1px 8px #ffe08255;
+      --input-bg: #fffbe9;
+      --input-border: #e4e826;
+      --text-main: #252b1b;
+      --card-bg: #fff;
+    }
+    body {
+      font-family: 'Quicksand', Tahoma, sans-serif;
+      background: linear-gradient(135deg, var(--lemon-bg) 0%, var(--lemon-bg2) 100%);
+      color: var(--text-main);
+      margin: 0 auto;
+      min-height: 100vh;
+      transition: background 0.5s, color 0.5s;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body.dark {
+      --lemon-main: #b3bc1a;
+      --lemon-dark: #a2ac14;
+      --lemon-green: #c9db3a;
+      --lemon-bg: #22251d;
+      --lemon-bg2: #3a3e2b;
+      --lemon-border: #b3bc1a;
+      --input-bg: #282a1d;
+      --input-border: #b3bc1a;
+      --text-main: #eeffb5;
+      --card-bg: #23261e;
+      background: linear-gradient(135deg, var(--lemon-bg), var(--lemon-bg2) 100%);
+      color: var(--text-main);
+    }
+    .lemon-logo-anim {
+      position: fixed;
+      left: 14px;
+      top: 30px;
+      z-index: 30;
+      width: 65px;
+      height: 65px;
+      pointer-events: none;
+      animation: lemon-bounce 2.5s cubic-bezier(.65,.18,.38,1.1) infinite alternate;
+    }
+    .lemon-logo-anim img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      animation: lemon-spin 3.5s linear infinite alternate;
+      filter: drop-shadow(0 8px 28px #ffe08288);
+      border-radius: 50%;
+      transition: filter 0.3s;
+    }
+    @keyframes lemon-bounce {
+      0% { transform: translateY(0) scale(1);}
+      40% { transform: translateY(-16px) scale(1.08);}
+      100% { transform: translateY(0) scale(1);}
+    }
+    @keyframes lemon-spin {
+      0% { transform: rotate(-8deg);}
+      100% { transform: rotate(12deg);}
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: var(--lemon-main);
+      border: none;
+      color: #665c00;
+      font-size: 1.6em;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      box-shadow: 0 2px 10px #ffe08266;
+      cursor: pointer;
+      z-index: 50;
+      transition: background 0.3s, color 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body.dark .theme-toggle {
+      background: var(--lemon-bg2);
+      color: var(--lemon-main);
+    }
+    .lemon-loading-cover {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--lemon-bg) 0%, var(--lemon-bg2) 100%);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s;
+      animation: fadein 0.9s cubic-bezier(.7,-0.15,.92,1.13);
+    }
+    .lemon-loading-cover.hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .lemon-loading-spinner {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 8px solid #fffcbe;
+      border-top: 8px solid var(--lemon-green);
+      border-right: 8px solid var(--lemon-main);
+      border-bottom: 8px solid #fffde7;
+      border-left: 8px solid var(--lemon-dark);
+      animation: lemon-spin 1.25s linear infinite;
+      margin: 0 auto;
+      position: relative;
+    }
+    @keyframes fadein {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 1.9rem;
+      letter-spacing: 1px;
+      font-weight: 800;
+      color: var(--lemon-dark);
+      text-shadow: 0 2px 20px #f9f87121, 0 1px 0 #fffbe7;
+    }
+    body.dark h1 {
+      color: var(--lemon-main);
+    }
+    #main-card {
+      background: var(--card-bg);
+      box-shadow: var(--lemon-shadow);
+      border-radius: 18px;
+      padding: 32px 26px 22px 26px;
+      margin: 70px auto 0 auto;
+      max-width: 470px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      transition: background 0.5s;
+      border: 1.7px solid var(--lemon-border);
+      position: relative;
+      z-index: 1;
+      animation: pop-in 0.7s cubic-bezier(.7,-0.25,.78,1.07);
+    }
+    @keyframes pop-in {
+      0% { transform: scale(0.96) translateY(38px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    label {
+      font-weight: 700;
+      margin-bottom: 7px;
+      color: var(--lemon-green);
+      text-align: left;
+      letter-spacing: .2px;
+      font-size: 1.07em;
+      margin-top: 0.5em;
+      transition: color 0.5s;
+    }
+    body.dark label {
+      color: var(--lemon-main);
+    }
+    .custom-select {
+      position: relative;
+      margin-bottom: 19px;
+      user-select: none;
+    }
+    .select-selected {
+      background-color: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 7px;
+      padding: 13px 38px 13px 16px;
+      cursor: pointer;
+      min-height: 44px;
+      font-size: 1.08em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      transition: box-shadow .25s, border 0.3s;
+      position: relative;
+      z-index: 2;
+    }
+    .select-selected:after {
+      content: "";
+      border: 7px solid transparent;
+      border-top: 7px solid var(--lemon-green);
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      transition: border-top 0.3s, top 0.3s;
+    }
+    .select-selected.open:after {
+      border-top: 0;
+      border-bottom: 7px solid var(--lemon-green);
+      top: 68%;
+    }
+    .select-items {
+      position: absolute;
+      background-color: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 7px 22px #c1df3277;
+      z-index: 3;
+      top: 105%;
+      left: 0;
+      right: 0;
+      max-height: 260px;
+      overflow-y: auto;
+      animation: dropdownOpen 0.36s cubic-bezier(.77,1.7,.45,1.01);
+      display: none;
+    }
+    .select-items.open {
+      display: block;
+    }
+    @keyframes dropdownOpen {
+      from { opacity:0; transform: translateY(-12px) scaleY(0.88);}
+      to { opacity:1; transform: translateY(0) scaleY(1);}
+    }
+    .select-item {
+      padding: 13px 16px;
+      font-size: 1.07em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      color: var(--text-main);
+      border-bottom: 1px solid #e7e7e7;
+      background: none;
+      transition: background 0.22s, color 0.22s;
+      position: relative;
+    }
+    .select-item:last-child {
+      border-bottom: none;
+    }
+    .select-item:hover, .select-item.selected {
+      background: var(--lemon-main);
+      color: #2f2b00;
+    }
+    body.dark .select-selected,
+    body.dark .select-items {
+      background: var(--input-bg);
+      border-color: var(--input-border);
+      color: var(--text-main);
+    }
+    body.dark .select-item:hover, body.dark .select-item.selected {
+      background: var(--lemon-green);
+      color: #23261e;
+    }
+    .chain-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: #fff;
+      object-fit: contain;
+      box-shadow: 0 2px 7px #e3e6a3bb;
+      margin-right: 6px;
+      transition: filter 0.2s;
+      border:1.2px solid #ecec4c;
+      display: inline-block;
+    }
+    body.dark .chain-logo {
+      background: #282a1d;
+      border-color: #b3bc1a;
+    }
+    input[type="text"] {
+      background: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 7px;
+      padding: 13px 16px;
+      font-size: 1em;
+      margin-bottom: 19px;
+      color: var(--text-main);
+      transition: border 0.3s, box-shadow 0.22s;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: var(--lemon-green);
+      box-shadow: 0 1px 8px #e4e82655;
+    }
+    .fetch-loading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1em;
+      margin-top: .5em;
+      color: var(--lemon-green);
+      font-weight: 700;
+      animation: fadein 0.5s;
+      font-size: 1.12em;
+    }
+    .fetch-spinner {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 4px solid #f9f871;
+      border-top: 4px solid var(--lemon-green);
+      border-bottom: 4px solid #ffe082;
+      border-left: 4px solid #e4e826;
+      animation: lemon-spin 0.85s linear infinite;
+      display: inline-block;
+    }
+    button[type="submit"] {
+      cursor: pointer;
+      background: linear-gradient(90deg, var(--lemon-main) 70%, var(--lemon-green) 100%);
+      color: #353c0f;
+      border: none;
+      padding: 13px 0;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 1.17em;
+      box-shadow: 0 3px 13px #f9f87144;
+      transition: background 0.3s, color 0.3s, transform 0.16s;
+      will-change: transform;
+      user-select: none;
+      letter-spacing: .4px;
+    }
+    button[type="submit"]:hover, button[type="submit"]:focus {
+      background: linear-gradient(90deg, var(--lemon-green) 65%, var(--lemon-main) 100%);
+      color: #0d1200;
+      transform: scale(1.04);
+      outline: none;
+    }
+    pre {
+      background: #23281c;
+      color: #eeffb5;
+      padding: 15px;
+      border-radius: 9px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 1.01em;
+      margin-top: 1em;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      border: 1.5px solid #b3bc1a;
+      box-shadow: 0 2px 13px #e8ff2e22;
+    }
+    .error {
+      color: #c71c1c;
+      font-weight: bold;
+      margin-top: 19px;
+      margin-bottom: 10px;
+      font-size: 1.08em;
+    }
+    .success {
+      color: #4a7c1c;
+      font-weight: bold;
+      margin-top: 19px;
+      margin-bottom: 10px;
+      font-size: 1.08em;
+    }
+    #result h3 {
+      color: var(--lemon-green);
+      margin-bottom: 0.5em;
+    }
+    @media (max-width: 600px) {
+      .lemon-logo-anim { left: 5px; top: 5px; width: 46px; height: 46px;}
+      .theme-toggle {top: 13px; right: 14px; width: 36px; height: 36px; font-size:1.07em;}
+      #main-card { padding: 16px 5vw 12px 5vw; margin-top: 55px;}
+      .lemon-loading-spinner { width: 48px; height: 48px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="lemon-loading-cover" id="pageLoading">
+    <div class="lemon-loading-spinner"></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+  <div class="lemon-logo-anim">
+    <img src="https://i.imgur.com/NDw7bQY.png" alt="lE logo" />
+  </div>
+  <div id="main-card">
+    <h1>Fetch Contract Mint Functions with LE</h1>
+    <form id="form" autocomplete="off">
+      <label for="chainSelect">Select Network:</label>
+      <div class="custom-select" id="customSelect">
+        <div class="select-selected" tabindex="0" aria-haspopup="listbox" aria-expanded="false" id="selectedOption">
+          <span class="placeholder" style="color:#aaa;">Select a network</span>
+        </div>
+        <div class="select-items" id="selectItems" role="listbox" aria-label="Network List">
+          <div class="select-item" data-value="1" tabindex="0"><img class="chain-logo" src="https://i.imgur.com/NDw7bQY.png" alt="Ethereum" />Ethereum Mainnet</div>
+          <div class="select-item" data-value="137" tabindex="0"><img class="chain-logo" src="https://i.imgur.com/NooQwVY.png" alt="Polygon" />Polygon</div>
+          <div class="select-item" data-value="8453" tabindex="0"><img class="chain-logo" src="https://i.imgur.com/3bquFfg.png" alt="Base" />Base</div>
+          <div class="select-item" data-value="42161" tabindex="0"><img class="chain-logo" src="https://i.imgur.com/M0QSHfZ.png" alt="Arbitrum" />Arbitrum</div>
+          <div class="select-item" data-value="10" tabindex="0"><img class="chain-logo" src="https://i.imgur.com/hPsOWGm.png" alt="Optimism" />OP Mainnet</div>
+          <div class="select-item" data-value="10143" tabindex="0"><img class="chain-logo" src="https://i.imgur.com/oBPLFOn.png" alt="Monad" />Monad</div>
+        </div>
+        <input type="hidden" id="chainSelect" name="chainid" required>
+      </div>
+
+      <label for="addressInput">Contract Address:</label>
+      <input type="text" id="addressInput" name="address" placeholder="e.g., 0x1234..." required />
+
+      <button type="submit">Fetch Mint Functions</button>
+    </form>
+    <div id="result" style="margin-top: 20px;"></div>
+  </div>
+  <script>
+    const pageLoading = document.getElementById('pageLoading');
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        pageLoading.classList.add('hide');
+        setTimeout(() => pageLoading.style.display = 'none', 600);
+      }, 900);
+    });
+
+    const themeBtn = document.getElementById('themeToggle');
+    function setTheme(dark) {
+      if (dark) {
+        document.body.classList.add('dark');
+        themeBtn.textContent = "☀️";
+        localStorage.setItem('lemonz-theme', 'dark');
+      } else {
+        document.body.classList.remove('dark');
+        themeBtn.textContent = "🌙";
+        localStorage.setItem('lemonz-theme', 'light');
+      }
+    }
+    themeBtn.onclick = function() {
+      setTheme(!document.body.classList.contains('dark'));
+    };
+    if (localStorage.getItem('lemonz-theme') === 'dark' ||
+      (!localStorage.getItem('lemonz-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setTheme(true);
+    }
+
+    const customSelect = document.getElementById('customSelect');
+    const selectSelected = document.getElementById('selectedOption');
+    const selectItems = document.getElementById('selectItems');
+    const chainSelect = document.getElementById('chainSelect');
+    let currentSelectedIndex = -1;
+    let selectOpen = false;
+
+    function openDropdown() {
+      selectItems.classList.add('open');
+      selectSelected.classList.add('open');
+      selectSelected.setAttribute('aria-expanded', 'true');
+      selectOpen = true;
+    }
+    function closeDropdown() {
+      selectItems.classList.remove('open');
+      selectSelected.classList.remove('open');
+      selectSelected.setAttribute('aria-expanded', 'false');
+      selectOpen = false;
+    }
+    selectSelected.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectOpen ? closeDropdown() : openDropdown();
+    });
+    selectSelected.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectOpen ? closeDropdown() : openDropdown();
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        openDropdown();
+        if (currentSelectedIndex < selectItems.children.length - 1) {
+          currentSelectedIndex++;
+          selectItems.children[currentSelectedIndex].focus();
+        }
+      }
+    });
+    selectItems.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentSelectedIndex < selectItems.children.length - 1) {
+          currentSelectedIndex++;
+          selectItems.children[currentSelectedIndex].focus();
+        }
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentSelectedIndex > 0) {
+          currentSelectedIndex--;
+          selectItems.children[currentSelectedIndex].focus();
+        }
+      }
+      if (e.key === 'Escape') {
+        closeDropdown();
+        selectSelected.focus();
+      }
+    });
+    Array.from(selectItems.children).forEach((item, idx) => {
+      item.addEventListener('click', () => {
+        selectItem(idx);
+        closeDropdown();
+      });
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectItem(idx);
+          closeDropdown();
+        }
+      });
+    });
+    function selectItem(idx) {
+      Array.from(selectItems.children).forEach((item, i) => {
+        item.classList.toggle('selected', i === idx);
+      });
+      const item = selectItems.children[idx];
+      selectSelected.innerHTML = item.innerHTML;
+      chainSelect.value = item.getAttribute('data-value');
+      chainSelect.dispatchEvent(new Event('input'));
+      currentSelectedIndex = idx;
+    }
+    document.addEventListener('click', function(e) {
+      if (!customSelect.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+
+    const form = document.getElementById('form');
+    const resultDiv = document.getElementById('result');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const chainid = chainSelect.value;
+      const address = document.getElementById('addressInput').value.trim();
+
+      if (!chainid || !address) {
+        alert('Please enter both network and contract address.');
+        return;
+      }
+
+      resultDiv.innerHTML = `
+        <div class="fetch-loading">
+          <span class="fetch-spinner"></span>
+          Fetching data...
+        </div>
+      `;
+
+      const workerUrl = 'https://jolly-base-cdac.lemonzm7.workers.dev/';
+
+      try {
+        const response = await fetch(`${workerUrl}?chainid=${chainid}&address=${address}`);
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          resultDiv.innerHTML = `<div class="error">Error: ${data.error || 'Unknown error occurred'}</div>`;
+          return;
+        }
+
+        resultDiv.innerHTML = '<h3>Found Mint Functions:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      } catch (err) {
+        resultDiv.innerHTML = `<div class="error">Connection error: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lemonz Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #fefce8;
+            --card-bg-color: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #5a5a5a;
+            --border-color: #eef1f5;
+            --accent-color: #facc15;
+            --accent-text: #1a1a1a;
+            --shadow-color: rgba(145, 107, 0, 0.1);
+        }
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg-color: #1e1e1e;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --border-color: #2f2f2f;
+            --accent-color: #fde047;
+            --accent-text: #1a1a1a;
+            --shadow-color: rgba(0, 0, 0, 0.25);
+        }
+        html {
+            height: 100%;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .header {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-primary);
+        }
+        h1 .logo-icon {
+            width: 45px;  
+            height: 45px; 
+        }
+        .tools-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+        @media (min-width: 768px) {
+            .tools-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .tool-card {
+            background-color: var(--card-bg-color);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            padding: 30px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: popIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .tool-card:nth-child(2) { animation-delay: 0.1s; }
+        .tool-card:nth-child(3) { animation-delay: 0.2s; }
+        .tool-card:nth-child(4) { animation-delay: 0.3s; }
+        .tool-card:nth-child(5) { animation-delay: 0.4s; }
+        .tool-card:nth-child(6) { animation-delay: 0.5s; }
+        .tool-card:nth-child(7) { animation-delay: 0.6s; }
+        .tool-card:nth-child(8) { animation-delay: 0.7s; }
+        .tool-card:nth-child(9) { animation-delay: 0.8s; }
+        .tool-card:nth-child(10) { animation-delay: 0.9s; }
+        .tool-card:nth-child(11) { animation-delay: 1.0s; }
+        .tool-card:nth-child(12) { animation-delay: 1.1s; }
+        .tool-card:nth-child(13) { animation-delay: 1.2s; }
+        .tool-card:nth-child(14) { animation-delay: 1.3s; }
+        /* انیمیشن برای کارت‌های جدید */
+        .tool-card:nth-child(15) { animation-delay: 1.4s; }
+        .tool-card:nth-child(16) { animation-delay: 1.5s; }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 30px var(--shadow-color);
+        }
+        .tool-card .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+            width: 80px;
+            height: 80px;
+            display: grid;
+            place-items: center;
+            background-color: var(--bg-color);
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+        .tool-card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+        }
+        .tool-card p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+        .theme-switch input {
+            display: none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            background-color: white;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .theme-switch-wrapper i {
+             margin: 0 10px;
+             color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="https://lestudios.xyz" style="text-decoration: none; color: inherit;">
+            <h1>
+                <img src="https://i.imgur.com/NDw7bQY.png" alt="LEtools Logo" class="logo-icon">LEtools
+            </h1>
+        </a>
+        <div class="theme-switch-wrapper">
+            <i class="fas fa-sun"></i>
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+            <i class="fas fa-moon"></i>
+        </div>
+    </header>
+    <main class="tools-container">
+        
+        <a href="LE token price Calculator.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-magnifying-glass-dollar"></i></div>
+            <h2>LE Price Calculator</h2>
+            <p>Calculate a token's price based on its market cap and supply.</p>
+        </a>
+        <a href="LE Advanced Crypto Comparison Tool.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-scale-balanced"></i></div>
+            <h2>LE Comparison Tool</h2>
+            <p>Compare market cap scenarios for multiple cryptos side-by-side.</p>
+        </a>
+        <a href="LE Liquidity Explorer.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-water-ladder"></i></div>
+            <h2>LE Liquidity Explorer</h2>
+            <p>Find which DEX has the most liquidity for any given token.</p>
+        </a>
+        <a href="LE gas tracker tools.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-gas-pump"></i></div>
+            <h2>LE Gas Tracker</h2>
+            <p>View real-time gas fees across multiple blockchain networks.</p>
+        </a>
+        <a href="LE Calculator tools.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-calculator"></i></div>
+            <h2>LECalculator</h2>
+            <p>Access various crypto calculators for your financial planning.</p>
+        </a>
+        <a href="LEcomputerHTML.html" class="tool-card">
+            <div class="icon"><i class="fa-brands fa-html5"></i></div>
+            <h2>LEComputer HTML Preview</h2>
+            <p>Preview and test your HTML code live.</p>
+        </a>
+        <a href="LECOMPUTEROnlineCodeRunner.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-terminal"></i></div>
+            <h2>LEComputer Code Runner</h2>
+            <p>Run code online in many programming languages.</p>
+        </a>
+        <a href="LEcompouter.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-laptop-code"></i></div>
+            <h2>LEComputer Main Tools</h2>
+            <p>Access the main dashboard of coding and engineering tools.</p>
+        </a>
+        <a href="LEtest.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+            <h2>LE Test Suite</h2>
+            <p>Run automated tests for your internet</p>
+        </a>
+        <a href="LEcontract.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-file-signature"></i></div>
+            <h2>LE Contract Inspector</h2>
+            <p>Analyze and inspect smart contract details on-chain.</p>
+        </a>
+        <a href="LEabi.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-cogs"></i></div>
+            <h2>LE ABI Converter</h2>
+            <p>Convert and interact with smart contract ABIs easily.</p>
+        </a>
+        <a href="LEpass.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-key"></i></div>
+            <h2>LE Password Generator</h2>
+            <p>Create strong, secure, and customizable passwords.</p>
+        </a>
+        <a href="LEsitecheck.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-network-wired"></i></div>
+            <h2>LE Site Checker</h2>
+            <p>Monitor uptime and performance of your websites.</p>
+        </a>
+        <a href="LEapi.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-cloud"></i></div>
+            <h2>LE API Playground</h2>
+            <p>Test, and interact with various web APIs in one place.</p>
+        </a>
+
+        
+        <a href="LEtranslate.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-language"></i></div>
+            <h2>LE Translate</h2>
+            <p>An AI-powered tool for accurate and contextual translations.</p>
+        </a>
+        <a href="LEmath.html" class="tool-card">
+            <div class="icon"><i class="fa-solid fa-square-root-variable"></i></div>
+            <h2>LE Math Solver</h2>
+            <p>A powerful calculator for solving complex mathematical problems.</p>
+        </a>
+
+    </main>
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.checked = false;
+            }
+        })();
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

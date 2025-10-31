@@ -187,15 +187,15 @@
   const colors = ["red", "green", "blue", "yellow"];
   const values = ["0","1","2","3","4","5","6","7","8","9","Skip","Reverse","+2"];
   let deck = [], discardPile = [];
-  let players = []; // Array of hands (array of cards)
+  let players = []; 
   let currentPlayer = 0;
-  let direction = 1; // 1 = clockwise, -1 = counter-clockwise
+  let direction = 1; 
   let centerCard = null;
   let gameOver = false;
   let waitingForColor = false;
   let unoCalled = [];
   let numPlayers = 2;
-  let timerDuration = 15 * 60; // 15 minutes in seconds
+  let timerDuration = 15 * 60; 
   let timerInterval = null;
 
   

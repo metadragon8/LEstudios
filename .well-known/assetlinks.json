@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "xyz.lestudios.twa",
+        "sha256_cert_fingerprints": ["83:46:3B:47:63:AC:E3:C3:3A:78:0D:28:C7:EE:CB:34:A2:C9:18:F6:74:FA:24:04:7B:86:2C:FB:2B:E6:10:89"]
+      }
+    }]

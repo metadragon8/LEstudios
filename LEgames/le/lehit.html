@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>leHIT</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            background: #050505;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            height: 100vh;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column; align-items: center;
+            z-index: 10; padding-top: 50px;
+        }
+
+        #level-display {
+            font-size: 4rem; color: rgba(255, 255, 255, 0.1);
+            font-weight: 900; line-height: 1; margin: 0;
+            transition: transform 0.2s;
+        }
+        #level-display.active { transform: scale(1.5); color: #0ff; text-shadow: 0 0 20px cyan; }
+
+        .score-label { color: #666; margin-top: 10px; letter-spacing: 2px; font-size: 1rem; }
+
+        #knives-left {
+            margin-top: 20px; display: flex; flex-direction: column-reverse; gap: 4px;
+        }
+        .k-dot { width: 20px; height: 8px; background: #333; border-radius: 2px; }
+        .k-dot.on { background: #0f0; box-shadow: 0 0 10px #0f0; }
+
+        
+        #menu-overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 50; transition: opacity 0.3s;
+            pointer-events: auto;
+        }
+        .hide { opacity: 0; pointer-events: none !important; }
+
+        h1 { font-size: 3.5rem; color: #ff0055; margin: 0; text-align: center; text-shadow: 2px 2px 0 #fff; }
+        .sub { color: #aaa; margin: 10px 0 40px; }
+
+        button {
+            background: transparent; color: #0ff; border: 2px solid #0ff;
+            padding: 20px 70px; font-size: 2rem; font-weight: bold; cursor: pointer;
+            font-family: inherit; box-shadow: 0 0 20px rgba(0,255,255,0.3);
+            transform: skew(-10deg);
+        }
+        button:active { transform: skew(-10deg) scale(0.95); background: rgba(0,255,255,0.2); }
+
+        
+        .shake { animation: shk 0.4s; }
+        @keyframes shk { 
+            0%, 100% {transform:translate(0,0);} 
+            20% {transform:translate(-10px, 10px);} 
+            40% {transform:translate(10px, -10px);} 
+            60% {transform:translate(-10px, 10px);} 
+            80% {transform:translate(10px, -10px);} 
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="level-display">1</div>
+        <div class="score-label">SCORE: <span id="score-val">0</span></div>
+        <div id="knives-left"></div>
+    </div>
+
+    <div id="menu-overlay">
+        <h1 id="m-head">NEON HIT</h1>
+        <p class="sub" id="m-sub">Ultimate Edition</p>
+        <button id="start-btn">PLAY</button>
+    </div>
+
+    <script>
+        
+        const AC = window.AudioContext || window.webkitAudioContext;
+        let actx;
+
+        function sfx(type) {
+            if(!actx) actx = new AC();
+            if(actx.state==='suspended') actx.resume();
+
+            const o = actx.createOscillator();
+            const g = actx.createGain();
+            o.connect(g); g.connect(actx.destination);
+            const t = actx.currentTime;
+
+            if(type === 'throw') {
+                o.type='triangle'; o.frequency.setValueAtTime(600, t);
+                g.gain.setValueAtTime(0.1, t); g.gain.linearRampToValueAtTime(0, t+0.05);
+                o.start(); o.stop(t+0.05);
+            } else if(type === 'hit') {
+                o.type='square'; o.frequency.setValueAtTime(200, t);
+                g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+                o.start(); o.stop(t+0.1);
+            } else if(type === 'win') {
+                o.type='sine'; o.frequency.setValueAtTime(500, t); o.frequency.linearRampToValueAtTime(1000, t+0.3);
+                g.gain.setValueAtTime(0.1, t); g.gain.linearRampToValueAtTime(0, t+0.3);
+                o.start(); o.stop(t+0.3);
+            } else { // Die
+                o.type='sawtooth'; o.frequency.setValueAtTime(100, t); o.frequency.linearRampToValueAtTime(20, t+0.5);
+                g.gain.setValueAtTime(0.3, t); g.gain.linearRampToValueAtTime(0, t+0.5);
+                o.start(); o.stop(t+0.5);
+                if(navigator.vibrate) navigator.vibrate(300);
+            }
+        }
+
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let W, H;
+
+        let state = 'MENU';
+        let level = 1, score = 0;
+        let rotation = 0; 
+        
+        
+        let stuckKnives = []; 
+        let targetRadius = 80; 
+        let rotationSpeed = 0.03;
+        
+        
+        let knivesTotal = 0;
+        let knivesRemaining = 0;
+
+        
+        let throwing = false; 
+        let throwY = 0; 
+        
+        let lastAction = 0;
+        let particles = [];
+
+        
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            
+            targetRadius = Math.min(W, H) * 0.18;
+        }
+        window.addEventListener('resize', resize);
+        
+        
+        
+        function startGame() {
+            level = 1; score = 0;
+            document.getElementById('score-val').innerText = 0;
+            loadLevel();
+        }
+
+        function loadLevel() {
+            state = 'PLAY';
+            document.getElementById('menu-overlay').classList.add('hide');
+            document.getElementById('level-display').innerText = level;
+            document.getElementById('level-display').classList.add('active');
+            setTimeout(()=>document.getElementById('level-display').classList.remove('active'), 300);
+
+            
+            knivesTotal = 7 + Math.floor(level / 2);
+            knivesRemaining = knivesTotal;
+            
+            rotation = 0;
+            stuckKnives = [];
+            throwing = false;
+            
+            
+            if(level > 1) {
+                let obstacles = Math.min(4, level - 1);
+                for(let i=0; i<obstacles; i++) {
+                    
+                    let ang = Math.random() * Math.PI * 2;
+                    
+                    stuckKnives.push(ang); 
+                }
+            }
+            
+            updateKnifeUI();
+            loop();
+        }
+
+        function input(e) {
+            if(e) { e.preventDefault(); e.stopPropagation(); }
+
+            
+            if(state !== 'PLAY') return;
+            
+            
+            if(Date.now() - lastAction < 150) return;
+            lastAction = Date.now();
+
+            
+            throwing = true;
+            throwY = H - 150; 
+            sfx('throw');
+            
+            
+            
+            let hitAngle = (Math.PI / 2) - rotation;
+            
+            hitAngle = hitAngle % (Math.PI * 2);
+            if(hitAngle < 0) hitAngle += (Math.PI * 2);
+            
+            
+            let minGap = 0.15; 
+            let crash = false;
+
+            for(let ang of stuckKnives) {
+                
+                let k = ang % (Math.PI * 2);
+                if(k < 0) k += (Math.PI * 2);
+
+                
+                let diff = Math.abs(hitAngle - k);
+                if(diff > Math.PI) diff = (Math.PI * 2) - diff; 
+
+                if(diff < minGap) {
+                    crash = true;
+                    break;
+                }
+            }
+
+            if(crash) {
+                gameOver();
+            } else {
+                
+                setTimeout(() => {
+                    
+                    sfx('hit');
+                    stuckKnives.push(hitAngle);
+                    knivesRemaining--;
+                    score++;
+                    document.getElementById('score-val').innerText = score;
+                    updateKnifeUI();
+                    createParticles();
+                    throwing = false; 
+
+                    if(knivesRemaining <= 0) {
+                        sfx('win');
+                        state = 'WAIT';
+                        setTimeout(() => { level++; loadLevel(); }, 800);
+                    }
+                }, 40); 
+            }
+        }
+
+        function updateKnifeUI() {
+            let el = document.getElementById('knives-left');
+            let html = '';
+            for(let i=0; i<knivesTotal; i++) {
+                let on = i < knivesRemaining ? 'on' : '';
+                html += `<div class="k-dot ${on}"></div>`;
+            }
+            el.innerHTML = html;
+        }
+
+        function createParticles() {
+            
+            let tx = W/2; 
+            let ty = (H*0.3) + targetRadius;
+            for(let i=0;i<10;i++){
+                particles.push({
+                    x: tx, y: ty,
+                    vx: (Math.random()-.5)*10, vy: (Math.random()-.5)*10,
+                    life: 1, color: '#0f0'
+                });
+            }
+        }
+
+        function gameOver() {
+            state = 'OVER';
+            sfx('die');
+            document.body.classList.add('shake');
+            setTimeout(()=>document.body.classList.remove('shake'), 400);
+
+            setTimeout(() => {
+                document.getElementById('menu-overlay').classList.remove('hide');
+                document.querySelector('#m-head').innerText = "BROKEN";
+                document.querySelector('#m-sub').innerText = "Best Score: " + score;
+                document.getElementById('start-btn').innerText = "RETRY";
+            }, 600);
+        }
+
+        
+        function loop() {
+            if(state === 'MENU') return;
+            requestAnimationFrame(loop);
+            
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, W, H);
+
+            let cx = W / 2;
+            let cy = H * 0.3; 
+
+           
+            let spd = 0.03 + (level * 0.005);
+            
+            if(level > 3) spd += Math.sin(Date.now() / 400) * 0.02;
+            rotation += spd;
+
+            
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation);
+
+            
+            ctx.beginPath(); ctx.arc(0, 0, targetRadius, 0, 6.28);
+            ctx.fillStyle = '#000'; ctx.fill();
+            ctx.strokeStyle = '#0f0'; ctx.lineWidth = 5; ctx.stroke();
+            
+            
+            ctx.shadowColor = '#0f0'; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
+
+            
+            ctx.beginPath(); ctx.arc(0, 0, 15, 0, 6.28); ctx.fillStyle = '#222'; ctx.fill();
+
+            
+            stuckKnives.forEach(ang => {
+                ctx.save();
+                ctx.rotate(ang);
+                
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(-3, targetRadius - 5, 6, 50); 
+                ctx.fillStyle = '#0f0'; 
+                ctx.fillRect(-5, targetRadius + 40, 10, 10);
+                ctx.restore();
+            });
+
+            ctx.restore();
+
+            
+            if(state === 'PLAY' && !throwing) {
+                drawKnifeAt(W/2, H - 120);
+            }
+            
+            if(throwing) {
+                throwY -= (H * 0.1); 
+                drawKnifeAt(W/2, throwY);
+            }
+
+            
+            for(let i=particles.length-1; i>=0; i--){
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.06;
+                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                ctx.globalAlpha = 1;
+                if(p.life<=0) particles.splice(i,1);
+            }
+        }
+
+        function drawKnifeAt(x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = '#fff';
+            
+            ctx.beginPath(); 
+            ctx.moveTo(0, -30); ctx.lineTo(6, 0); ctx.lineTo(6, 50); ctx.lineTo(-6, 50); ctx.lineTo(-6, 0);
+            ctx.fill();
+            
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(-6, 50, 12, 20);
+            ctx.restore();
+        }
+
+        
+        const actionBtn = document.getElementById('start-btn');
+        actionBtn.onclick = (e) => { e.stopPropagation(); startGame(); };
+        actionBtn.ontouchstart = (e) => { e.stopPropagation(); startGame(); };
+
+        
+        window.addEventListener('touchstart', input, {passive: false});
+        window.addEventListener('mousedown', input);
+        window.addEventListener('keydown', e => { if(e.code==='Space') input(); });
+
+        
+        resize();
+
+    </script>
+</body>
+</html>

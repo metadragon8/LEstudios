@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000">
+    <title>LEsky</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            background: #020005;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        
+        .grid-bg {
+            position: fixed; width: 200%; height: 200%; top: -50%; left: -50%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: moveGrid 5s linear infinite;
+            z-index: -1;
+            pointer-events: none;
+        }
+        @keyframes moveGrid { from {transform: perspective(500px) rotateX(60deg) translateY(0);} to {transform: perspective(500px) rotateX(60deg) translateY(50px);} }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        
+        #ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
+            padding-top: 15%;
+        }
+
+        #score {
+            font-size: 5rem; color: rgba(255,255,255,0.1);
+            font-weight: 900; line-height: 1;
+            -webkit-text-stroke: 2px #0ff;
+            text-shadow: 0 0 20px rgba(0,255,255,0.5);
+            transition: 0.1s;
+        }
+        #score.pulse { color: #fff; transform: scale(1.3); text-shadow: 0 0 40px #fff; }
+
+        .msg {
+            font-size: 2rem; color: #f0f;
+            opacity: 0; transition: 0.2s;
+            text-shadow: 2px 2px #0ff; letter-spacing: 2px; margin-top: 10px;
+        }
+        .msg.vis { opacity: 1; transform: scale(1.2); }
+
+        
+        #menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 50; transition: opacity 0.3s;
+            pointer-events: auto;
+        }
+        .hide { opacity: 0; pointer-events: none !important; }
+
+        h1 {
+            font-size: 3rem; color: #fff; margin: 0;
+            text-shadow: -2px -2px #f0f, 2px 2px #0ff;
+            letter-spacing: 2px;
+        }
+
+        button {
+            margin-top: 30px;
+            background: transparent;
+            color: #0ff; border: 2px solid #0ff;
+            padding: 20px 60px; font-size: 1.5rem;
+            font-family: inherit; font-weight: bold;
+            box-shadow: 0 0 15px rgba(0,255,255,0.3);
+            cursor: pointer; text-transform: uppercase;
+            transition: 0.2s; clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
+        }
+        button:active { background: #0ff; color: #000; transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+    <canvas id="c"></canvas>
+    
+    <div id="ui">
+        <div id="score">0</div>
+        <div id="combo" class="msg">PERFECT</div>
+    </div>
+
+    <div id="menu">
+        <h1 id="title">NEON STACK</h1>
+        <p style="color:#888; margin-top:5px;" id="sub">Cyber Edition</p>
+        <button id="btn">START</button>
+    </div>
+
+    <script>
+        
+        const AC = window.AudioContext || window.webkitAudioContext;
+        let actx;
+
+        function sfx(t) {
+            if(!actx) actx = new AC();
+            if(actx.state==='suspended') actx.resume();
+            const o=actx.createOscillator(), g=actx.createGain();
+            o.connect(g); g.connect(actx.destination);
+
+            const now = actx.currentTime;
+            if(t==='perf'){
+                o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(1200, now+.1);
+                o.type='sine'; g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now+.3);
+                o.start(); o.stop(now+.3);
+            } else if(t==='hit'){
+                o.frequency.setValueAtTime(300, now); o.type='triangle';
+                g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now+.1);
+                o.start(); o.stop(now+.1);
+                if(navigator.vibrate) navigator.vibrate(5);
+            } else {
+                o.frequency.setValueAtTime(150, now); o.frequency.linearRampToValueAtTime(20, now+.4);
+                o.type='sawtooth'; g.gain.setValueAtTime(0.3, now); g.gain.linearRampToValueAtTime(0, now+.4);
+                o.start(); o.stop(now+.4);
+                if(navigator.vibrate) navigator.vibrate(200);
+            }
+        }
+
+        
+        const cvs = document.getElementById('c');
+        const ctx = cvs.getContext('2d');
+        let W, H;
+
+        
+        let blocks = [];
+        let debris = [];
+        let particles = [];
+        let active = null;
+        let state = 'MENU'; 
+        let score = 0;
+        let hue = 0;
+        let combo = 0;
+        
+        
+        let camY = 0, targetCamY = 0;
+        
+        
+        let lastAction = 0; 
+        let gameStartTime = 0;
+
+        
+        const S = {
+            h: 35,         
+            zoom: 1.2,     
+            tol: 5,        
+            speedBase: 0   
+        };
+        let bW; 
+
+        function resize() {
+            W = cvs.width = window.innerWidth;
+            H = cvs.height = window.innerHeight;
+            
+            bW = Math.min(W * 0.6, 350); 
+            S.speedBase = W * 0.01; 
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        
+        
+        function init() {
+            state = 'PLAY';
+            score = 0; combo = 0;
+            blocks = []; debris = []; particles = [];
+            hue = 180; 
+            camY = 0; targetCamY = 0;
+            gameStartTime = Date.now(); 
+
+            
+            document.getElementById('score').innerText = 0;
+            document.getElementById('menu').classList.add('hide');
+
+            
+            blocks.push({
+                x: (W-bW)/2, y: H - 100, 
+                w: bW, h: 50, 
+                c: hue, active: false
+            });
+            
+            spawn();
+            loop();
+        }
+
+        function spawn() {
+            const prev = blocks[blocks.length-1];
+            hue = (hue + 25) % 360;
+            
+            let dir = (score%2===0) ? -1 : 1;
+            
+            let x = dir===-1 ? W : -prev.w;
+            let y = prev.y - S.h;
+
+            active = {
+                x: x, y: y, 
+                w: prev.w, h: S.h, 
+                c: hue, 
+                vx: dir * (S.speedBase + (score*0.1)),
+                dir: dir
+            };
+        }
+
+        function tap() {
+            
+            if (state !== 'PLAY') return;
+            
+            
+            if (!active) return;
+            
+            
+            if (Date.now() - gameStartTime < 300) return;
+            
+            
+            if (Date.now() - lastAction < 100) return;
+            lastAction = Date.now();
+
+            
+            let curr = active;
+            let prev = blocks[blocks.length-1];
+            active = null; 
+
+            let dist = curr.x - prev.x;
+            
+            
+            if(Math.abs(dist) <= S.tol) {
+                curr.x = prev.x; 
+                combo++;
+                score++;
+                flashScore();
+                sfx('perf');
+                explode(curr.x + curr.w/2, curr.y + curr.h/2, curr.c, 15);
+                
+                if(combo > 1) msg(combo > 4 ? "MEGA!" : "PERFECT");
+                
+                
+                if(combo >= 5) {
+                    curr.w += 20; curr.x -= 10;
+                    if(curr.w > W) curr.w = W; 
+                    msg("GROWTH!");
+                    combo = 0;
+                }
+                
+                addBlock(curr);
+            } 
+            
+            else {
+                let overlap = prev.w - Math.abs(dist);
+                if(overlap <= 0) {
+                    gameOver();
+                    return;
+                }
+
+                
+                combo = 0;
+                score++;
+                flashScore();
+                sfx('hit');
+                
+                curr.w = overlap;
+                
+                let cutW = prev.w - overlap;
+                let cutX; 
+                
+                if(dist > 0) {
+                    
+                    cutX = curr.x + curr.w; 
+                    
+                } else {
+                    
+                    cutX = curr.x;
+                    curr.x = prev.x;
+                }
+                
+                createDebris(cutX, curr.y, cutW, curr.h, curr.c);
+                addBlock(curr);
+            }
+        }
+
+        function addBlock(b) {
+            blocks.push(b);
+            document.getElementById('score').innerText = score;
+            
+            
+            targetCamY += S.h;
+            
+            spawn();
+        }
+
+        function createDebris(x, y, w, h, c) {
+            let vx = (x > W/2) ? 5 : -5; 
+            debris.push({x, y, w, h, c, vx, vy:-3, rot:0});
+        }
+
+        function explode(x, y, c, n) {
+            for(let i=0;i<n;i++) particles.push({
+                x, y, c,
+                vx: (Math.random()-.5)*15, vy: (Math.random()-.5)*15,
+                life: 1
+            });
+        }
+
+        function flashScore() {
+            let s = document.getElementById('score');
+            s.classList.add('pulse');
+            setTimeout(()=>s.classList.remove('pulse'), 100);
+        }
+
+        function msg(text) {
+            let m = document.getElementById('combo');
+            m.innerText = text;
+            m.classList.add('vis');
+            setTimeout(()=>m.classList.remove('vis'), 500);
+        }
+
+        function gameOver() {
+            state = 'OVER';
+            sfx('fail');
+            
+            if(active) createDebris(active.x, active.y, active.w, active.h, active.c);
+            
+            setTimeout(() => {
+                document.getElementById('title').innerText = "CRASHED";
+                document.getElementById('sub').innerText = "SCORE: " + score;
+                document.getElementById('btn').innerText = "REBOOT";
+                document.getElementById('menu').classList.remove('hide');
+            }, 500);
+        }
+
+        
+        function loop() {
+            if(state==='MENU') return;
+            requestAnimationFrame(loop);
+
+            ctx.clearRect(0,0,W,H);
+
+            
+            camY += (targetCamY - camY) * 0.1;
+
+            
+            for(let i=debris.length-1; i>=0; i--) {
+                let d = debris[i];
+                d.x += d.vx; d.y += d.vy; d.vy += 0.8; d.rot += 0.1;
+                
+                if(d.y - camY > H) { debris.splice(i,1); continue; }
+
+                drawRect(d.x, d.y + camY, d.w, d.h, d.c, true, d.rot);
+            }
+
+            
+            let start = Math.max(0, blocks.length-20);
+            for(let i=start; i<blocks.length; i++) {
+                let b = blocks[i];
+                drawRect(b.x, b.y + camY, b.w, b.h, b.c);
+            }
+
+            
+            if(active) {
+                active.x += active.vx;
+                
+                if(active.x > W*1.2 && active.vx>0) active.vx *= -1;
+                if(active.x + active.w < -W*0.2 && active.vx<0) active.vx *= -1;
+                
+                drawRect(active.x, active.y + camY, active.w, active.h, active.c);
+            }
+
+            
+            for(let i=particles.length-1; i>=0; i--) {
+                let p = particles[i];
+                p.x+=p.vx; p.y+=p.vy; p.life-=0.04;
+                if(p.life<=0) { particles.splice(i,1); continue; }
+                
+                ctx.fillStyle = `hsl(${p.c}, 100%, 50%)`;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y + camY, 5, 5);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawRect(x, y, w, h, hue, rotate=false, ang=0) {
+            if(y > H) return; 
+            ctx.save();
+            if(rotate) {
+                ctx.translate(x+w/2, y+h/2);
+                ctx.rotate(ang);
+                ctx.translate(-w/2, -h/2);
+                x = 0; y = 0;
+            }
+
+            
+            ctx.fillStyle = `hsla(${hue}, 100%, 50%, 0.6)`; 
+            ctx.fillRect(x, y, w, h);
+            
+            
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = `hsl(${hue}, 100%, 70%)`;
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+            ctx.shadowBlur = 15; 
+            ctx.strokeRect(x, y, w, h);
+            
+            
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = `rgba(255,255,255,0.5)`;
+            ctx.fillRect(x, y, w, 2); 
+            
+            ctx.restore();
+        }
+
+        
+        const canvasArea = document.getElementById('c');
+        
+        function handleInput(e) {
+            e.stopPropagation();
+            
+            if(e.cancelable) e.preventDefault();
+            tap();
+        }
+
+        window.addEventListener('touchstart', handleInput, {passive:false});
+        window.addEventListener('mousedown', handleInput);
+        window.addEventListener('keydown', e=>{ if(e.code==='Space') tap(); });
+
+        const startBtn = document.getElementById('btn');
+        startBtn.addEventListener('touchstart', e=>{ e.stopPropagation(); init(); });
+        startBtn.addEventListener('click', e=>{ e.stopPropagation(); init(); });
+
+    </script>
+</body>
+</html>
